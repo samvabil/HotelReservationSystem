@@ -1,0 +1,6 @@
+spring:
+    application:
+        name : hotelreservationsystem
+    data:
+        mongodb:
+            uri: $MONGO_DB
