@@ -3,7 +3,6 @@ package com.skillstorm.hotelreservationsystem.models;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -19,6 +18,18 @@ import java.util.List;
  */
 @Document(collection = "rooms")
 public class Room {
+
+    
+    public Room(String roomNumber, RoomType roomType, boolean accessible, boolean petFriendly, boolean nonSmoking,
+            boolean occupied, List<UnavailableDate> unavailableDates) {
+        this.roomNumber = roomNumber;
+        this.roomType = roomType;
+        this.accessible = accessible;
+        this.petFriendly = petFriendly;
+        this.nonSmoking = nonSmoking;
+        this.occupied = occupied;
+        this.unavailableDates = unavailableDates;
+    }
 
     /**
      * The unique identifier for the room.
