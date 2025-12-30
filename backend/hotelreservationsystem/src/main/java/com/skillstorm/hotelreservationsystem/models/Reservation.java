@@ -1,6 +1,8 @@
 package com.skillstorm.hotelreservationsystem.models;
 
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 
@@ -24,17 +26,19 @@ public class Reservation {
     @Id
     private String id;
 
-    /**
-     * The unique identifier of the user who made the reservation.
-     * This references the "_id" field in the "users" collection.
-     */
-    private String userId; 
+ 
 
     /**
-     * The unique identifier of the room being booked.
-     * This references the "_id" field in the "rooms" collection.
+     *  User who made the reservation
      */
-    private String roomId; 
+    @DBRef
+    private User user;
+
+    /**
+     * The room that this reservation is for
+     */
+    @DBRef
+    private Room room; 
 
     /**
      * The scheduled arrival date for the guest.
@@ -104,7 +108,7 @@ public class Reservation {
      */
     @Override
     public String toString() {
-        return "Reservation [id=" + id + ", userId=" + userId + ", roomId=" + roomId + ", checkIn=" + checkIn
+        return "Reservation [id=" + id + ", user=" + user + ", roomId=" + room + ", checkIn=" + checkIn
                 + ", checkOut=" + checkOut + ", guestCount=" + guestCount + ", totalPrice=" + totalPrice + ", status="
                 + status + ", paymentIntentId=" + paymentIntentId + "]";
     }
@@ -120,8 +124,8 @@ public class Reservation {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((id == null) ? 0 : id.hashCode());
-        result = prime * result + ((userId == null) ? 0 : userId.hashCode());
-        result = prime * result + ((roomId == null) ? 0 : roomId.hashCode());
+        result = prime * result + ((user == null) ? 0 : user.hashCode());
+        result = prime * result + ((room == null) ? 0 : room.hashCode());
         result = prime * result + ((checkIn == null) ? 0 : checkIn.hashCode());
         result = prime * result + ((checkOut == null) ? 0 : checkOut.hashCode());
         result = prime * result + guestCount;
@@ -154,15 +158,15 @@ public class Reservation {
                 return false;
         } else if (!id.equals(other.id))
             return false;
-        if (userId == null) {
-            if (other.userId != null)
+        if (user == null) {
+            if (other.user != null)
                 return false;
-        } else if (!userId.equals(other.userId))
+        } else if (!user.equals(other.user))
             return false;
-        if (roomId == null) {
-            if (other.roomId != null)
+        if (room == null) {
+            if (other.room != null)
                 return false;
-        } else if (!roomId.equals(other.roomId))
+        } else if (!room.equals(other.room))
             return false;
         if (checkIn == null) {
             if (other.checkIn != null)
@@ -209,39 +213,39 @@ public class Reservation {
     }
 
     /**
-     * Gets the ID of the user who made the reservation.
+     * Gets the user who made the reservation.
      *
-     * @return The user ID.
+     * @return The user.
      */
-    public String getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
     /**
-     * Sets the ID of the user making the reservation.
+     * Sets the user making the reservation.
      *
-     * @param userId The new user ID.
+     * @param user The new user ID.
      */
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     /**
-     * Gets the ID of the reserved room.
+     * Gets the reserved room.
      *
-     * @return The room ID.
+     * @return The room.
      */
-    public String getRoomId() {
-        return roomId;
+    public Room getRoom() {
+        return room;
     }
 
     /**
-     * Sets the ID of the reserved room.
+     * Sets the reserved room.
      *
-     * @param roomId The new room ID.
+     * @param room The new room.
      */
-    public void setRoomId(String roomId) {
-        this.roomId = roomId;
+    public void setRoom(Room room) {
+        this.room = room;
     }
 
     /**

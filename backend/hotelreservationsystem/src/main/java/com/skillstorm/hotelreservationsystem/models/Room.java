@@ -1,6 +1,7 @@
 package com.skillstorm.hotelreservationsystem.models;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.LocalDate;
@@ -32,11 +33,11 @@ public class Room {
     private String roomNumber;
 
     /**
-     * The ID of the associated {@code RoomType}.
-     * This references the "_id" field of a document in the "room_types" collection.
+     * The room type object
+     * 
      */
-    @Field("type")
-    private String roomTypeId; 
+    @DBRef
+    private RoomType roomType;
     
     /**
      * Indicates if the room meets accessibility standards (ADA compliant).
@@ -190,11 +191,11 @@ public class Room {
     /**
      * Returns a string representation of the Room.
      *
-     * @return A string containing the room's ID, number, type ID, attributes, and unavailable dates.
+     * @return A string containing the room's ID, number, type, attributes, and unavailable dates.
      */
     @Override
     public String toString() {
-        return "Room [id=" + id + ", roomNumber=" + roomNumber + ", roomTypeId=" + roomTypeId + ", accessible="
+        return "Room [id=" + id + ", roomNumber=" + roomNumber + ", roomTypeId=" + roomType + ", accessible="
                 + accessible + ", petFriendly=" + petFriendly + ", nonSmoking=" + nonSmoking + ", occupied=" + occupied
                 + ", unavailableDates=" + unavailableDates + "]";
     }
@@ -211,7 +212,7 @@ public class Room {
         int result = 1;
         result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((roomNumber == null) ? 0 : roomNumber.hashCode());
-        result = prime * result + ((roomTypeId == null) ? 0 : roomTypeId.hashCode());
+        result = prime * result + ((roomType == null) ? 0 : roomType.hashCode());
         result = prime * result + (accessible ? 1231 : 1237);
         result = prime * result + (petFriendly ? 1231 : 1237);
         result = prime * result + (nonSmoking ? 1231 : 1237);
@@ -246,10 +247,10 @@ public class Room {
                 return false;
         } else if (!roomNumber.equals(other.roomNumber))
             return false;
-        if (roomTypeId == null) {
-            if (other.roomTypeId != null)
+        if (roomType == null) {
+            if (other.roomType != null)
                 return false;
-        } else if (!roomTypeId.equals(other.roomTypeId))
+        } else if (!roomType.equals(other.roomType))
             return false;
         if (accessible != other.accessible)
             return false;
@@ -304,21 +305,20 @@ public class Room {
     }
 
     /**
-     * Gets the ID of the associated RoomType.
+     * Gets the Room Type
      *
-     * @return The RoomType ID.
+     * @return The RoomType.
      */
-    public String getRoomTypeId() {
-        return roomTypeId;
+    public RoomType getRoomTypeId() {
+        return roomType;
     }
 
     /**
-     * Sets the ID of the associated RoomType.
-     *
-     * @param roomTypeId The new RoomType ID.
+     * Sets the Room Type
+     * @param roomType
      */
-    public void setRoomTypeId(String roomTypeId) {
-        this.roomTypeId = roomTypeId;
+    public void setRoomType(RoomType roomType) {
+        this.roomType = roomType;
     }
 
     /**
