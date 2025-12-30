@@ -1,6 +1,5 @@
 package com.skillstorm.hotelreservationsystem.models;
 
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -18,7 +17,6 @@ import java.time.LocalDate;
  */
 @Document(collection = "reservations")
 public class Reservation {
-
     
 
     public Reservation(User user, Room room, LocalDate checkIn, LocalDate checkOut, int guestCount, double totalPrice,
