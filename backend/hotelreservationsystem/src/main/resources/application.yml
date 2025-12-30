@@ -7,3 +7,18 @@ spring:
     output:
         ansi:
             enabled: always
+    security:
+        oauth2:
+            client:
+                registration:
+                    google:
+                        client-id: ${GOOGLE_CLIENT_ID}
+                        client-secret: ${GOOGLE_CLIENT_SECRET}
+                        # What info we want from the user
+                        scope:
+                        - openid
+                        - profile
+                        - email
+                        # This must match what you put in Google Cloud Console
+                        redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+                        client-name: Google
