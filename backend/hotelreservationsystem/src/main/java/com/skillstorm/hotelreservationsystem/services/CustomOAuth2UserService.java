@@ -2,9 +2,12 @@ package com.skillstorm.hotelreservationsystem.services;
 
 import com.skillstorm.hotelreservationsystem.models.User;
 import com.skillstorm.hotelreservationsystem.repositories.UserRepository;
+
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +29,7 @@ import java.util.Optional;
  * @version 1.0
  */
 @Service
-public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+public class CustomOAuth2UserService extends OidcUserService {
 
     private final UserRepository userRepository;
 
@@ -51,9 +54,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
      * @throws OAuth2AuthenticationException If an error occurs while loading the user from the provider.
      */
     @Override
-    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+    public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
+
         // 1. Let the default service load the user from Google first
-        OAuth2User oAuth2User = super.loadUser(userRequest);
+        OidcUser oAuth2User = super.loadUser(userRequest);
 
         // 2. Extract the attributes (Google sends these)
         Map<String, Object> attributes = oAuth2User.getAttributes();
@@ -75,7 +79,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             if (user.getAuth() != null) {
                 user.getAuth().setAvatarUrl(picture);
             } else {
-                 user.setAuth(new User.AuthProvider("google", providerId, picture));
+                user.setAuth(new User.AuthProvider("google", providerId, picture));
             }
             userRepository.save(user);
         } else {

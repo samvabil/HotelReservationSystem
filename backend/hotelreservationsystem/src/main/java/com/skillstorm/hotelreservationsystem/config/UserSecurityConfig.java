@@ -63,7 +63,7 @@ public class UserSecurityConfig {
             // 3. OAUTH2 (GUESTS)
             .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo
-                    .userService(customOAuth2UserService)
+                    .oidcUserService(customOAuth2UserService)
                 )
                 // Forces unauthenticated users directly to Google, skipping the selection page.
                 .loginPage("/oauth2/authorization/google") 
