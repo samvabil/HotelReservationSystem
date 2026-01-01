@@ -87,7 +87,7 @@ export default function Navbar() {
               <Box sx={{ flexGrow: 0 }}>
                 <Tooltip title="Open settings">
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                    <Avatar alt={user.displayName} src={user.image} imgProps={{ referrerPolicy: "no-referrer" }} />
+                    <Avatar alt={user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1)} src={user.auth?.avatarUrl} imgProps={{ referrerPolicy: "no-referrer" }} />
                   </IconButton>
                 </Tooltip>
                 <Menu
@@ -101,7 +101,7 @@ export default function Navbar() {
                   onClose={handleCloseUserMenu}
                 >
                   <MenuItem disabled>
-                    <Typography textAlign="center">Hi, {user.firstName}!</Typography>
+                    <Typography textAlign="center">Hi, {user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1)}!</Typography>
                   </MenuItem>
                   <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/account'); }}>
                     <Typography textAlign="center">My Account</Typography>

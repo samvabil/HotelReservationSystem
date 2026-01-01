@@ -368,6 +368,8 @@ public class User {
         this.role = role;
     }
 
+
+
     /**
      * Returns a string representation of the User.
      *

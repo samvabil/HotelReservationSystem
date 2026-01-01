@@ -9,17 +9,10 @@ export interface User {
     /**
      * The unique MongoDB document identifier for the user.
      */
-    _id: string;
+    id: string;
 
-    /**
-     * The unique identifier provided by Google's OAuth service.
-     */
-    googleId: string;
 
-    /**
-     * The user's full display name (e.g., "John Doe").
-     */
-    displayName: string;
+
 
     /**
      * The user's given name (first name).
@@ -34,7 +27,10 @@ export interface User {
     /**
      * The URL to the user's profile picture hosted by Google.
      */
-    image: string;
+    auth?: {
+        providerId: string
+        avatarUrl: string; // Match your Java field name
+    };
 
     /**
      * The user's email address.
@@ -44,5 +40,5 @@ export interface User {
     /**
      * The date string (ISO format) representing when the user account was created.
      */
-    createdAt: string;
+    stripeCustomerId: string;
 }
