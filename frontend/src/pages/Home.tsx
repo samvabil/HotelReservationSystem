@@ -2,6 +2,27 @@ import { Box, Typography, Button, Container, Card, Grid, CardMedia, CardContent 
 // FIX 1: Import the new Grid2 component
 import { useNavigate } from "react-router-dom";
 
+/**
+ * The main landing page component for the application.
+ *
+ * This component renders the introductory page of the "Gamer Hotel". It is designed
+ * to be visually striking and immediately communicate the hotel's theme.
+ *
+ * The layout is divided into two primary sections:
+ *
+ * 1.  **Hero Section:** A large, full-width banner with a themed background image,
+ * promotional text, and a primary call-to-action button ("Book Your Battlestation")
+ * that navigates the user to the booking route.
+ *
+ * 2.  **Marketing/Features Section:** A container displaying a responsive three-column grid.
+ * Each column contains a Card highlighting a specific unique selling point of the hotel
+ * (e.g., RTX 5090 PCs, Retro Consoles, Gigabit Fiber), complete with an illustrative image and description.
+ *
+ * It utilizes Material UI components (Box, Grid, Card, Typography) and `react-router-dom` for navigation.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered JSX element for the Home page.
+ */
 export default function Home() {
   const navigate = useNavigate();
 

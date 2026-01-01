@@ -5,6 +5,19 @@ import { Link, useNavigate } from 'react-router-dom';
 // Mock state for now - we will connect this to Redux later
 const isAuthenticated = false; 
 
+/**
+ * The main navigation bar component for the application.
+ *
+ * This component renders the top header using Material UI's `AppBar`. It includes:
+ * - The "Level Up Lounge" logo and title, which link back to the homepage.
+ * - Primary navigation links (e.g., "Book A Room").
+ * - User authentication actions, displaying either a "Sign In" button or a "My Account" button based on the `isAuthenticated` status.
+ *
+ * It utilizes `react-router-dom`'s `useNavigate` and `Link` for client-side routing.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered application bar.
+ */
 export default function Navbar() {
   const navigate = useNavigate();
 
