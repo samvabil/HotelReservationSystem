@@ -3,6 +3,7 @@ import { theme } from "./theme";
 import Navbar from "./components/Navbar";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
+import LoginSuccess from "./components/LoginSuccess";
 
 // Placeholder components for routes we haven't built yet
 const Placeholder = ({ title }: { title: string }) => (
@@ -25,8 +26,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/book" element={<Placeholder title="Book A Room" />} />
-            <Route path="/login" element={<Placeholder title="Sign In Page" />} />
             <Route path="/account" element={<Placeholder title="My Account" />} />
+            <Route path="/login-success" element={<LoginSuccess />} />
           </Routes>
         </Box>
       </BrowserRouter>

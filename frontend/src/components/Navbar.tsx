@@ -1,25 +1,53 @@
-import { AppBar, Toolbar, Typography, Button, Box, Container } from '@mui/material';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports'; // A controller icon
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, Menu, MenuItem, Avatar, Tooltip } from '@mui/material';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; 
+import { useSelector, useDispatch } from 'react-redux';
+import { type RootState } from '../store/store';
+import { logout } from '../store/userAuthSlice';
+import { useLogoutUserMutation } from '../services/userAuthApi'; 
 
-// Mock state for now - we will connect this to Redux later
-const isAuthenticated = false; 
+// MAKE SURE THIS PORT MATCHES YOUR SPRING BOOT SERVER
+const SPRING_BOOT_URL = "http://localhost:8080";
 
-/**
- * The main navigation bar component for the application.
- *
- * This component renders the top header using Material UI's `AppBar`. It includes:
- * - The "Level Up Lounge" logo and title, which link back to the homepage.
- * - Primary navigation links (e.g., "Book A Room").
- * - User authentication actions, displaying either a "Sign In" button or a "My Account" button based on the `isAuthenticated` status.
- *
- * It utilizes `react-router-dom`'s `useNavigate` and `Link` for client-side routing.
- *
- * @component
- * @returns {JSX.Element} The rendered application bar.
- */
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const dispatch = useDispatch();
+  
+  // Get auth state
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.userAuth);
+  const [logoutApiCall] = useLogoutUserMutation();
+  const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElUser(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
+
+  const handleLogout = async () => {
+    handleCloseUserMenu();
+    try {
+      await logoutApiCall().unwrap();
+      dispatch(logout());
+      navigate('/');
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
+
+  // --- THIS IS THE FIX ---
+  const handleLogin = () => {
+    // 1. Save current location so we can return here later
+    const fullPath = location.pathname + location.search;
+    sessionStorage.setItem('redirectPath', fullPath);
+
+    // 2. FORCE BROWSER REDIRECT (Do not use navigate)
+    window.location.href = `${SPRING_BOOT_URL}/oauth2/authorization/google`;
+  };
 
   return (
     <AppBar position="static">
@@ -46,8 +74,7 @@ export default function Navbar() {
             Level Up Lounge
           </Typography>
 
-          {/* NAVIGATION LINKS */}
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Button 
                 onClick={() => navigate('/book')}
                 sx={{ my: 2, color: 'white', display: 'block' }}
@@ -55,17 +82,40 @@ export default function Navbar() {
               Book A Room
             </Button>
 
-            {isAuthenticated ? (
-              <Button 
-                onClick={() => navigate('/account')}
-                variant="outlined" 
-                color="secondary"
-              >
-                My Account
-              </Button>
+            {isAuthenticated && user ? (
+              // LOGGED IN VIEW
+              <Box sx={{ flexGrow: 0 }}>
+                <Tooltip title="Open settings">
+                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                    <Avatar alt={user.displayName} src={user.image} imgProps={{ referrerPolicy: "no-referrer" }} />
+                  </IconButton>
+                </Tooltip>
+                <Menu
+                  sx={{ mt: '45px' }}
+                  id="menu-appbar"
+                  anchorEl={anchorElUser}
+                  anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  keepMounted
+                  transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                  open={Boolean(anchorElUser)}
+                  onClose={handleCloseUserMenu}
+                >
+                  <MenuItem disabled>
+                    <Typography textAlign="center">Hi, {user.firstName}!</Typography>
+                  </MenuItem>
+                  <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/account'); }}>
+                    <Typography textAlign="center">My Account</Typography>
+                  </MenuItem>
+                  <MenuItem onClick={handleLogout}>
+                    <Typography textAlign="center" color="error">Logout</Typography>
+                  </MenuItem>
+                </Menu>
+              </Box>
             ) : (
+              // LOGGED OUT VIEW
               <Button 
-                onClick={() => navigate('/login')}
+                // CRITICAL FIX: call handleLogin, NOT navigate('/login')
+                onClick={handleLogin}
                 variant="contained" 
                 color="primary"
               >

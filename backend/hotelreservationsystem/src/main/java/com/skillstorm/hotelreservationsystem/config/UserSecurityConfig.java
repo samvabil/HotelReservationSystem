@@ -27,9 +27,11 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 public class UserSecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final UserFrontendRedirectSuccessHandler successHandler;
 
-    public UserSecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
+    public UserSecurityConfig(CustomOAuth2UserService customOAuth2UserService, UserFrontendRedirectSuccessHandler successHandler) {
         this.customOAuth2UserService = customOAuth2UserService;
+        this.successHandler = successHandler;
     }
 
     /**
@@ -67,6 +69,7 @@ public class UserSecurityConfig {
                 )
                 // Forces unauthenticated users directly to Google, skipping the selection page.
                 .loginPage("/oauth2/authorization/google") 
+                .successHandler(successHandler)
             )
 
             // 4. FORM LOGIN (EMPLOYEES)
