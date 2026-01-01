@@ -13,6 +13,19 @@ export const apiSlice = createApi({
       // If you were using JWT tokens, you'd attach them here.
       // Since we use Cookies, 'credentials: include' is usually handled in the hook options
       // or by default depending on the browser environment.
+
+      // 1. Try to find the XSRF-TOKEN in the browser's cookies
+      const token = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('XSRF-TOKEN='))
+        ?.split('=')[1];
+
+      // 2. SET THE HEADER
+      // If we found the token, send it to Spring
+      if (token) {
+        // Decode it just in case it's URL encoded
+        headers.set('X-XSRF-TOKEN', decodeURIComponent(token));
+      }
       return headers;
     }, 
   }),

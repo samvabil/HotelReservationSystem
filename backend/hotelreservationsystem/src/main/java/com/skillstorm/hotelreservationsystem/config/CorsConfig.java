@@ -24,7 +24,7 @@ public class CorsConfig {
         config.addAllowedOrigin("http://localhost:5173");
         
         // 3. Allow standard headers and methods
-        config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+        config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-XSRF-TOKEN"));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         
         source.registerCorsConfiguration("/**", config);

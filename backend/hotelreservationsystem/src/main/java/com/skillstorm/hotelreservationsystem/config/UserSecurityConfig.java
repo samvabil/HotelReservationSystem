@@ -7,7 +7,11 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Security configuration for the Hotel Reservation System.
@@ -43,13 +47,24 @@ public class UserSecurityConfig {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        
+        // 1. Create a Handler that supports RAW tokens
+        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+        // This is the specific line that fixes the 403 for React:
+        requestHandler.setCsrfRequestAttributeName(null);
+        
         http
             // 1. ENABLE CSRF (The secure way)
             // Uses CookieCsrfTokenRepository so frontends can read the XSRF-TOKEN cookie
             // and return it in the X-XSRF-TOKEN header.
+            //.csrf(csrf -> csrf.disable())
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                // 2. PLUG IN THE HANDLER HERE
+                .csrfTokenRequestHandler(requestHandler)
             )
+
+            .cors(Customizer.withDefaults())
 
             // 2. Define URL Access Rules (OPEN BY DEFAULT)
             .authorizeHttpRequests(auth -> auth
@@ -72,11 +87,21 @@ public class UserSecurityConfig {
                 .successHandler(successHandler)
             )
 
+            .logout(logout -> logout
+                .logoutUrl("/logout") // The URL we call from React
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    response.setStatus(HttpServletResponse.SC_OK); // Return 200 instead of redirect
+                })
+                .invalidateHttpSession(true) // Kill the server session
+                .deleteCookies("JSESSIONID", "XSRF-TOKEN") // Kill the browser cookie
+            )
+
             // 4. FORM LOGIN (EMPLOYEES)
             // Keeps the standard login active for employees who are already authenticated
             // via a separate admin flow.
             .formLogin(Customizer.withDefaults())
-            .httpBasic(Customizer.withDefaults());
+            .httpBasic(Customizer.withDefaults())
+            .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class);
 
         return http.build();
     }
