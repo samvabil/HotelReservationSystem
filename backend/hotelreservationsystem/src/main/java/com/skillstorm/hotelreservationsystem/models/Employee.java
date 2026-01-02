@@ -31,6 +31,8 @@ public class Employee implements UserDetails {
 
     private Instant createdAt = Instant.now();
 
+    private Instant lastLogin;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
@@ -109,6 +111,14 @@ public class Employee implements UserDetails {
         this.createdAt = createdAt;
     }
 
+    public Instant getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(Instant lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -126,5 +136,4 @@ public class Employee implements UserDetails {
     public String toString() {
         return "Employee [id=" + id + ", employeeId=" + employeeId + ", email=" + email + ", roles=" + roles + ", isActive=" + isActive + ", createdAt=" + createdAt + "]";
     }
-
 }
