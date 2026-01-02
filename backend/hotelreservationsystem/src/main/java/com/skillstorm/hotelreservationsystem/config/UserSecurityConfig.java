@@ -96,11 +96,7 @@ public class UserSecurityConfig {
                 .deleteCookies("JSESSIONID", "XSRF-TOKEN") // Kill the browser cookie
             )
 
-            // 4. FORM LOGIN (EMPLOYEES)
-            // Keeps the standard login active for employees who are already authenticated
-            // via a separate admin flow.
-            .formLogin(Customizer.withDefaults())
-            .httpBasic(Customizer.withDefaults())
+
             .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class);
 
         return http.build();
