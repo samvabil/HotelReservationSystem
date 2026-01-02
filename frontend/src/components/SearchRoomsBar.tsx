@@ -14,7 +14,8 @@ import dayjs, { Dayjs } from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
 import { type RootState } from '../store/store';
 import { 
-  setDatesAndGuests, 
+  setDatesAndGuests,
+  setGuestCount,
   setFilters, 
   setGamingPreferences, 
   clearBookingState 
@@ -68,6 +69,9 @@ export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
         checkOut: dates.checkOut.toISOString(),
         guests: guests
       }));
+    }
+    else {
+        dispatch(setGuestCount(guests));
     }
 
     // B. Dispatch Filters (Convert '' back to null)

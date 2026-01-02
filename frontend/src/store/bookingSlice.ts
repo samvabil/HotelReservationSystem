@@ -82,6 +82,11 @@ const bookingSlice = createSlice({
       localStorage.setItem('bookingState', JSON.stringify(state));
     },
 
+    setGuestCount: (state, action: PayloadAction<number>) => {
+      state.guestCount = action.payload;
+      localStorage.setItem('bookingState', JSON.stringify(state));
+    },
+
     // This Reducer handles ANY filter update automatically
     setFilters: (state, action: PayloadAction<Partial<RoomFilters>>) => {
       state.filters = { ...state.filters, ...action.payload };
@@ -106,7 +111,8 @@ const bookingSlice = createSlice({
 });
 
 export const { 
-  setDatesAndGuests, 
+  setDatesAndGuests,
+  setGuestCount,
   setFilters, 
   setGamingPreferences, 
   selectRoom, 
