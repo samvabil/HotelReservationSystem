@@ -21,7 +21,8 @@ export default function RoomCard({ roomType, onBook }: RoomCardProps) {
     : "https://via.placeholder.com/400x300?text=No+Image";
 
   return (
-    <Card elevation={4} sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+    <Card elevation={4} sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, mb: 3, borderRadius: 2, overflow: 'hidden', border: '2px solid',
+        borderColor: 'primary.main' }}>
       
       {/* 1. LEFT: IMAGE */}
       <CardMedia
@@ -41,7 +42,7 @@ export default function RoomCard({ roomType, onBook }: RoomCardProps) {
               {roomType.name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-               {roomType.numBedrooms} Bedroom • {roomType.numBeds} {roomType.typeBed} Bed{roomType.numBeds > 1 ? 's' : ''} • {roomType.capacity} Guests
+               {roomType.numBeedroom} Bedroom • {roomType.numBeds} {roomType.typeBed} Bed{roomType.numBeds > 1 ? 's' : ''} • {roomType.capacity} Guests
             </Typography>
           </Box>
           <Chip 
@@ -90,7 +91,7 @@ export default function RoomCard({ roomType, onBook }: RoomCardProps) {
           onClick={() => onBook(roomType.id)}
           sx={{ minWidth: 150, height: 50, fontWeight: 'bold' }}
         >
-          See Availability
+          Book a stay!
         </Button>
       </Box>
 

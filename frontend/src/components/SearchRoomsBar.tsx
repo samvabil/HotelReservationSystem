@@ -253,7 +253,7 @@ export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
 
             </Grid>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                <Button onClick={handleClear} color="inherit" size="small">Clear Filters</Button>
+                <Button onClick={handleClear} color="secondary" size="small" variant="contained" >Clear Filters</Button>
             </Box>
           </AccordionDetails>
         </Accordion>
