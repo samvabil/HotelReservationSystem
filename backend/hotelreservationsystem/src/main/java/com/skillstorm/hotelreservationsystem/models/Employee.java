@@ -31,8 +31,6 @@ public class Employee implements UserDetails {
 
     private Instant createdAt = Instant.now();
 
-    private Instant lastLogin;
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
