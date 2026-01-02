@@ -6,7 +6,6 @@ export interface RoomFilters {
   minPrice: number | null;
   maxPrice: number | null;
   
-  // Specific Booleans (null = Don't Care)
   accessible: boolean | null;
   petFriendly: boolean | null;
   nonSmoking: boolean | null;

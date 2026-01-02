@@ -1,53 +1,26 @@
-import { Container, Typography, Box } from '@mui/material';
+import { Container, Typography, Box, CircularProgress, Alert } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { type RootState } from '../store/store';
+import { useSearchRoomsQuery } from '../services/roomApi';
 import SearchRoomsBar from '../components/SearchRoomsBar';
 import RoomCard from '../components/RoomCard';
-import { type RoomType } from '../types/RoomType';
-
-// --- MOCK DATA: Room Types ---
-const MOCK_ROOM_TYPES: RoomType[] = [
-  {
-    id: 'type-1',
-    name: "Ultimate Gamer Suite",
-    pricePerNight: 299.99,
-    numBeds: 2,
-    typeBed: "Queen",
-    numBedrooms: 1,
-    squareFeet: 650,
-    capacity: 4,
-    hasJacuzzi: true,
-    hasKitchen: true,
-    levelOfPc: 3, // High End
-    numPcs: 2,
-    consoles: ["PS5", "Xbox Series X", "Switch"],
-    images: ["https://images.unsplash.com/photo-1616594039964-40891a904d08?q=80&w=1000"]
-  },
-  {
-    id: 'type-2',
-    name: "Co-Op Double",
-    pricePerNight: 149.50,
-    numBeds: 2,
-    typeBed: "Twin",
-    numBedrooms: 1,
-    squareFeet: 350,
-    capacity: 2,
-    hasJacuzzi: false,
-    hasKitchen: false,
-    levelOfPc: 2, // Mid Range
-    numPcs: 1,
-    consoles: ["PS5"],
-    images: ["https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?q=80&w=1000"]
-  }
-];
 
 export default function Book() {
-  
-  const handleSearchTrigger = () => {
-    console.log("Fetching new room types...");
-  };
+  // 1. Get the current search criteria from Redux
+  const bookingState = useSelector((state: RootState) => state.booking);
+
+  // 2. Pass that state into the API Hook
+  // RTK Query automatically refetches whenever 'bookingState' changes!
+  const { 
+    data: results, 
+    isLoading, 
+    isFetching, // True when refetching in background
+    isError 
+  } = useSearchRoomsQuery(bookingState);
 
   const handleSelectType = (roomTypeId: string) => {
     console.log("User selected Type ID:", roomTypeId);
-    // TODO: Open Modal to show actual Rooms of this type (e.g., Room 101, Room 102)
+    // TODO: Open Modal using this ID
   };
 
   return (
@@ -56,22 +29,50 @@ export default function Book() {
         Find Your Perfect Stay
       </Typography>
       
+      {/* Search Bar - This updates Redux, which triggers the query above */}
       <Box sx={{ mb: 6 }}>
-        <SearchRoomsBar onSearch={handleSearchTrigger} />
+        <SearchRoomsBar onSearch={() => { /* No-op: The Redux state change triggers the fetch */ }} />
       </Box>
 
+      {/* Results Section */}
       <Box>
-        <Typography variant="h5" sx={{ mb: 3 }}>
+        <Typography variant="h5" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
             Our Room Collections
+            {isFetching && <CircularProgress size={20} />} 
         </Typography>
+
+        {isError && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            Unable to load rooms. Please try again later.
+          </Alert>
+        )}
         
-        {MOCK_ROOM_TYPES.map((type) => (
-          <RoomCard 
-            key={type.id} 
-            roomType={type} 
-            onBook={handleSelectType} 
-          />
-        ))}
+        {isLoading && !results ? (
+             // Initial Loading State Skeleton
+             <Box sx={{ textAlign: 'center', mt: 4 }}>
+                <CircularProgress />
+                <Typography sx={{ mt: 2 }}>Finding the best setup for you...</Typography>
+             </Box>
+        ) : (
+            // Results List
+            <>
+                {results?.map((result) => (
+                <RoomCard 
+                    key={result.roomType.id} 
+                    roomType={result.roomType} 
+                    onBook={handleSelectType} 
+                    // Optional: You could pass 'availableCount' to the card if you want to show urgency
+                    // availableCount={result.availableRooms.length}
+                />
+                ))}
+
+                {results?.length === 0 && (
+                    <Alert severity="info" variant="outlined">
+                        No rooms match your specific criteria. Try removing some filters!
+                    </Alert>
+                )}
+            </>
+        )}
       </Box>
     </Container>
   );
