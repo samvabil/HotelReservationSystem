@@ -30,6 +30,9 @@ public class RoomController {
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             
+            @RequestParam(required = false) Integer minBeds,
+            @RequestParam(required = false) Integer minBedrooms,
+
             @RequestParam(required = false) Boolean accessible,
             @RequestParam(required = false) Boolean petFriendly,
             @RequestParam(required = false) Boolean nonSmoking,
@@ -46,6 +49,8 @@ public class RoomController {
         request.setGuestCount(guests);
         request.setMinPrice(minPrice);
         request.setMaxPrice(maxPrice);
+        request.setMinBeds(minBeds);
+        request.setMinBedrooms(minBedrooms);
         request.setAccessible(accessible);
         request.setPetFriendly(petFriendly);
         request.setNonSmoking(nonSmoking);

@@ -21,6 +21,9 @@ export const roomApi = apiSlice.injectEndpoints({
         if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
         if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
         if (filters.roomType) params.append('roomType', filters.roomType);
+
+        if (filters.minBeds) params.append('minBeds', filters.minBeds.toString());
+        if (filters.minBedrooms) params.append('minBedrooms', filters.minBedrooms.toString());
         
         if (filters.accessible) params.append('accessible', 'true');
         if (filters.petFriendly) params.append('petFriendly', 'true');
