@@ -4,6 +4,8 @@ import { type RootState } from '../store/store';
 import { useSearchRoomsQuery } from '../services/roomApi';
 import SearchRoomsBar from '../components/SearchRoomsBar';
 import RoomCard from '../components/RoomCard';
+import { useState } from 'react';
+import RoomSelectionModal from '../components/RoomSelectionModal';
 
 export default function Book() {
   // 1. Get the current search criteria from Redux
@@ -18,9 +20,19 @@ export default function Book() {
     isError 
   } = useSearchRoomsQuery(bookingState);
 
+  const [selectedResult, setSelectedResult] = useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const handleSelectType = (roomTypeId: string) => {
     console.log("User selected Type ID:", roomTypeId);
-    // TODO: Open Modal using this ID
+    
+    const foundResult = results?.find(r => r.roomType.id === roomTypeId);
+
+    if (foundResult) {
+      // 2. Set the data and open the modal
+      setSelectedResult(foundResult);
+      setIsModalOpen(true);
+    }
   };
 
   return (
@@ -74,6 +86,17 @@ export default function Book() {
             </>
         )}
       </Box>
+      {selectedResult && (
+        <RoomSelectionModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          roomTypeName={selectedResult.roomType.name}
+          price={selectedResult.roomType.pricePerNight}
+          availableRooms={selectedResult.availableRooms} 
+          // Handle the final booking action
+          
+        />
+      )}
     </Container>
   );
 }
