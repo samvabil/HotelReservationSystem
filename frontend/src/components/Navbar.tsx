@@ -33,7 +33,7 @@ export default function Navbar() {
     try {
       await logoutApiCall().unwrap();
       dispatch(logout());
-      navigate('/');
+      window.location.reload();
     } catch (error) {
       console.error("Logout failed", error);
     }
