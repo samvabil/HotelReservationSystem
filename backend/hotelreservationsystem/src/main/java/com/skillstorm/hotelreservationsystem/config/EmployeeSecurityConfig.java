@@ -46,10 +46,11 @@ public class EmployeeSecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/employees/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/employees/session").hasAnyRole("ADMIN", "EMPLOYEE")
                 .requestMatchers("/api/employees/**").hasAnyRole("ADMIN", "EMPLOYEE")
             )
 
-            .httpBasic(basic -> {})
+            .httpBasic(Customizer.withDefaults())
 
             .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class);
 

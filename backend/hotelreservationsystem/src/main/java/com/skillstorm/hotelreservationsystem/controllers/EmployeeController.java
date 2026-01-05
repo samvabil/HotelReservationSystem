@@ -45,4 +45,12 @@ public class EmployeeController {
         );
     }
 
+    /**
+     * If this endpoint is reached, Basic Auth succeeded. Spring will create a session and store SecurityContext automatically.
+     */
+    @PostMapping("/session")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void startSession() {
+    }
+
 }
