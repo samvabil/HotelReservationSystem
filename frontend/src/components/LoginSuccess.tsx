@@ -14,7 +14,6 @@ const LoginSuccess = () => {
     if (user) {
       dispatch(setUser(user));
       const redirectPath = sessionStorage.getItem('redirectPath') || '/';
-      sessionStorage.removeItem('redirectPath');
       navigate(redirectPath);
     } 
     if (isError) {

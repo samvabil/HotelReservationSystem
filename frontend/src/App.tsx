@@ -3,6 +3,7 @@ import { theme } from "./theme";
 import Navbar from "./components/Navbar";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
+import Book from "./pages/Book"
 import LoginSuccess from "./components/LoginSuccess";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -53,7 +54,7 @@ function App() {
           
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/book" element={<Placeholder title="Book A Room" />} />
+            <Route path="/book" element={<Book/>} />
             <Route path="/account" element={<Placeholder title="My Account" />} />
             <Route path="/login-success" element={<LoginSuccess />} />
           </Routes>
