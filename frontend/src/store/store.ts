@@ -2,7 +2,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import userAuthReducer from './userAuthSlice';
 import { apiSlice } from './apiSlice';
 import bookingReducer from './bookingSlice';
-import { paymentApi } from '../services/paymentApi';
 
 export const store = configureStore({
   reducer: {
@@ -11,14 +10,11 @@ export const store = configureStore({
     booking: bookingReducer,
     //API
     [apiSlice.reducerPath]: apiSlice.reducer
-    // Add other slices here later (e.g., bookingSlice)
   },
   // Adding the api middleware enables caching, invalidation, polling, etc.
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware()
-      .concat(apiSlice.middleware)
-      .concat(paymentApi.middleware)
-  ,
+    getDefaultMiddleware().concat(apiSlice.middleware),
+  
 });
 
 // Infer types for useDispatch and useSelector

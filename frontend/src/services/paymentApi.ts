@@ -1,18 +1,14 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { apiSlice } from '../store/apiSlice'; // Import your MAIN api slice
 
-export const paymentApi = createApi({
-  reducerPath: 'paymentApi',
-  // Ensure the baseUrl matches your backend controller path structure
-  baseQuery: fetchBaseQuery({ 
-      baseUrl: 'http://localhost:8080/payments',
-      // CRITICAL: This sends cookies/auth with every request
-      credentials: 'include' 
-  }),
+// We use injectEndpoints instead of createApi
+export const paymentApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    // We use 'mutation' because this is a POST request that changes server state
     createPaymentIntent: builder.mutation<{ clientSecret: string }, { amount: number; currency: string }>({
       query: (body) => ({
-        url: '/create-intent',
+        // Note: We use the full path relative to your apiSlice BASE_URL
+        // If apiSlice BASE_URL is 'http://localhost:8080', this becomes:
+        // 'http://localhost:8080/payments/create-intent'
+        url: '/payments/create-intent', 
         method: 'POST',
         body,
       }),
@@ -20,5 +16,4 @@ export const paymentApi = createApi({
   }),
 });
 
-// Export the hook for use in components
 export const { useCreatePaymentIntentMutation } = paymentApi;
