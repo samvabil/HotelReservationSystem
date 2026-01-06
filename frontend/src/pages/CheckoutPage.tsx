@@ -180,7 +180,7 @@ export default function CheckoutPage() {
                         
                         {clientSecret ? (
                             <Elements stripe={stripePromise} options={{ clientSecret }}>
-                                <PaymentForm totalCost={total} />
+                                <PaymentForm totalCost={total} roomId={roomId || ''}/>
                             </Elements>
                         ) : (
                             <Box sx={{ textAlign: 'center', py: 4 }}>
