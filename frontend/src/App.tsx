@@ -57,6 +57,14 @@ function App() {
             <Route path="/book" element={<Book/>} />
             <Route path="/account" element={<Placeholder title="My Account" />} />
             <Route path="/login-success" element={<LoginSuccess />} />
+            <Route 
+              path="/checkout/:roomId" 
+              element={
+                <RequireAuth>
+                  <CheckoutPage />
+                </RequireAuth>
+              } 
+            />
           </Routes>
         </Box>
       </BrowserRouter>
