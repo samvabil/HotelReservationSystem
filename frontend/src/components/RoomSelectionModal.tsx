@@ -78,7 +78,7 @@ export default function RoomSelectionModal({
       )}
 
       {/* Jacuzzi Logic */}
-      {room.roomType?.hasJacuzzi && (
+      {room.roomTypeId.hasJacuzzi && (
         <Tooltip title="Jacuzzi Tub">
           <HotTubIcon fontSize="small" />
         </Tooltip>

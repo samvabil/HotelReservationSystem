@@ -1,6 +1,7 @@
 import { apiSlice } from "../store/apiSlice";
 import { type RoomTypeSearchResult } from "../types/RoomTypeSearchResult";
 import { type BookingState } from "../store/bookingSlice";
+import type { Room } from "../types/Room";
 
 export const roomApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -44,13 +45,22 @@ export const roomApi = apiSlice.injectEndpoints({
       },
       // This allows us to invalidate this cache later if we add a booking
       providesTags: ['Room'], 
-    }),
+    }
+  ),
 
     // Future endpoints can go here (e.g., getRoomById)
 
+  getRoomById: builder.query<Room, string>({
+      // 1. The URL matches your Controller (@GetMapping("/{id}"))
+      query: (id) => `/rooms/${id}`,
+      
+      // 2. (Optional) Cache settings - keep the data fresh
+      providesTags: (result, error, id) => [{ type: 'Room', id }],
+    }
+  ),
   }),
   overrideExisting: false, // Prevents errors during hot-reloading
 });
 
 // Export the auto-generated hook
-export const { useSearchRoomsQuery } = roomApi;
+export const { useSearchRoomsQuery, useGetRoomByIdQuery } = roomApi;

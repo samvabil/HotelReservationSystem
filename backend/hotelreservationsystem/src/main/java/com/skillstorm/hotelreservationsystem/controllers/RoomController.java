@@ -2,9 +2,11 @@ package com.skillstorm.hotelreservationsystem.controllers;
 
 import com.skillstorm.hotelreservationsystem.dto.BookingSearchRequest;
 import com.skillstorm.hotelreservationsystem.dto.BookingSearchResult;
-import com.skillstorm.hotelreservationsystem.models.RoomType;
+import com.skillstorm.hotelreservationsystem.models.Room;
 import com.skillstorm.hotelreservationsystem.services.RoomService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -12,13 +14,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rooms")
-//@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class RoomController {
 
     private final RoomService roomService;
 
     public RoomController(RoomService roomService) {
         this.roomService = roomService;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Room> getRoomById(@PathVariable String id) {
+        Room room = roomService.getRoomById(id);
+        return new ResponseEntity<>(room, HttpStatus.OK);
     }
 
     @GetMapping("/search")

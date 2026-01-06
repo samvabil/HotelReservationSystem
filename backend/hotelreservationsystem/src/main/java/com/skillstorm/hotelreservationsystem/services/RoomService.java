@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,6 +22,11 @@ public class RoomService {
     public RoomService(RoomRepository roomRepository, RoomTypeRepository roomTypeRepository) {
         this.roomRepository = roomRepository;
         this.roomTypeRepository = roomTypeRepository;
+    }
+
+    public Room getRoomById(String id) {
+        return roomRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Room not found with ID: " + id));
     }
 
     // CHANGED: Return type is now List<RoomTypeSearchResult>

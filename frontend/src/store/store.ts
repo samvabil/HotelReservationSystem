@@ -6,15 +6,17 @@ import bookingReducer from './bookingSlice';
 
 export const store = configureStore({
   reducer: {
+    // STATE
     userAuth: userAuthReducer,
     employeeAuth: employeeAuthReducer,
     booking: bookingReducer,
+    //API
     [apiSlice.reducerPath]: apiSlice.reducer
-    // Add other slices here later (e.g., bookingSlice)
   },
   // Adding the api middleware enables caching, invalidation, polling, etc.
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(apiSlice.middleware),
+  
 });
 
 // Infer types for useDispatch and useSelector

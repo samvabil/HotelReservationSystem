@@ -22,3 +22,6 @@ spring:
                         # This must match what you put in Google Cloud Console
                         redirect-uri: "http://localhost:8080/login/oauth2/code/google"
                         client-name: Google
+
+stripe:
+    key: ${STRIPE_SECRET}

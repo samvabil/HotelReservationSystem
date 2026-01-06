@@ -8,7 +8,7 @@ export interface UnavailableDate {
 export interface Room {
   id: string;
   roomNumber: string;    // "101"
-  roomType: RoomType;    // The full object (or just ID depending on API depth)
+  roomTypeId: RoomType;    // The full object (or just ID depending on API depth)
   
   // Specific features of this physical room
   accessible: boolean;

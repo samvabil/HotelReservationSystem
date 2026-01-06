@@ -11,6 +11,8 @@ import { setUser } from "./store/userAuthSlice";
 import { useGetCurrentUserQuery } from "./services/userAuthApi";
 import EmployeeLogin from "./pages/EmployeeLogin";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import RequireAuth from "./components/RequireAuth";
+import CheckoutPage from "./pages/CheckoutPage";
 
 // Placeholder components for routes we haven't built yet
 const Placeholder = ({ title }: { title: string }) => (
@@ -62,6 +64,14 @@ function App() {
             <Route path="/employee/login" element={<EmployeeLogin />} />
             <Route path="/employee" element={<EmployeeDashboard />} />
             <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+            <Route 
+              path="/checkout/:roomId" 
+              element={
+                <RequireAuth>
+                  <CheckoutPage />
+                </RequireAuth>
+              } 
+            />
           </Routes>
         </Box>
       </BrowserRouter>
