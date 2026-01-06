@@ -9,6 +9,8 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setUser } from "./store/userAuthSlice";
 import { useGetCurrentUserQuery } from "./services/userAuthApi";
+import RequireAuth from "./components/RequireAuth";
+import CheckoutPage from "./pages/CheckoutPage";
 
 // Placeholder components for routes we haven't built yet
 const Placeholder = ({ title }: { title: string }) => (

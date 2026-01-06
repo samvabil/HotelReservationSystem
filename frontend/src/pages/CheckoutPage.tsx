@@ -30,7 +30,7 @@ export default function CheckoutPage() {
   const checkOut = dayjs(checkOutDate);
   const nights = Math.max(1, checkOut.diff(checkIn, 'day'));
   
-  const pricePerNight = room?.roomType.pricePerNight || 0;
+  const pricePerNight = room?.roomTypeId?.pricePerNight || 0;
   const subtotal = pricePerNight * nights;
   const taxes = subtotal * 0.08; 
   const total = subtotal + taxes;
@@ -91,7 +91,7 @@ export default function CheckoutPage() {
                   
                   <Box sx={{ mb: 2 }}>
                     <Typography variant="subtitle1" fontWeight="bold">
-                      {room.roomType.name}
+                      {room.roomTypeId.name}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                        Room {room.roomNumber}
