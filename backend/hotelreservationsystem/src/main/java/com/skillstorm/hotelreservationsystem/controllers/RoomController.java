@@ -3,7 +3,6 @@ package com.skillstorm.hotelreservationsystem.controllers;
 import com.skillstorm.hotelreservationsystem.dto.BookingSearchRequest;
 import com.skillstorm.hotelreservationsystem.dto.BookingSearchResult;
 import com.skillstorm.hotelreservationsystem.models.Room;
-import com.skillstorm.hotelreservationsystem.models.RoomType;
 import com.skillstorm.hotelreservationsystem.services.RoomService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -15,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/rooms")
-//@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class RoomController {
 
     private final RoomService roomService;
