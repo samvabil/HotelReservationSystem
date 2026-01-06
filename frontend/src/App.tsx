@@ -9,6 +9,8 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setUser } from "./store/userAuthSlice";
 import { useGetCurrentUserQuery } from "./services/userAuthApi";
+import EmployeeLogin from "./pages/EmployeeLogin";
+import EmployeeDashboard from "./pages/EmployeeDashboard";
 
 // Placeholder components for routes we haven't built yet
 const Placeholder = ({ title }: { title: string }) => (
@@ -57,6 +59,8 @@ function App() {
             <Route path="/book" element={<Book/>} />
             <Route path="/account" element={<Placeholder title="My Account" />} />
             <Route path="/login-success" element={<LoginSuccess />} />
+            <Route path="/employee/login" element={<EmployeeLogin />} />
+            <Route path="/employee" element={<EmployeeDashboard />} />
           </Routes>
         </Box>
       </BrowserRouter>
