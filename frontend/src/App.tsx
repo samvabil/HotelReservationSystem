@@ -61,6 +61,7 @@ function App() {
             <Route path="/login-success" element={<LoginSuccess />} />
             <Route path="/employee/login" element={<EmployeeLogin />} />
             <Route path="/employee" element={<EmployeeDashboard />} />
+            <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
           </Routes>
         </Box>
       </BrowserRouter>

@@ -32,7 +32,15 @@ export const employeeAuthApi = apiSlice.injectEndpoints({
     getEmployeeMe: builder.query<EmployeeMe, void>({
       query: () => "/api/employees/me",
     }),
+
+    // 3) logout employee session
+    logoutEmployee: builder.mutation<void, void>({
+      query: () => ({
+        url: "/api/employees/logout",
+        method: "POST",
+      }),
+    }),
   }),
 });
 
-export const { useStartEmployeeSessionMutation, useLazyGetEmployeeMeQuery } = employeeAuthApi;
+export const { useStartEmployeeSessionMutation, useLazyGetEmployeeMeQuery, useLogoutEmployeeMutation } = employeeAuthApi;

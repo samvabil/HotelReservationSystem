@@ -33,9 +33,14 @@ export default function EmployeeLogin() {
       await startSession({ email, password }).unwrap();
       const me = await getMe().unwrap();
       dispatch(setEmployee(me));
-      navigate("/employee");
-    } catch {
-      setErrorMsg("Invalid credentials or inactive employee.");
+      const redirectTo = sessionStorage.getItem("employeeRedirectPath") || "/employee/dashboard";
+      sessionStorage.removeItem("employeeRedirectPath");
+      navigate(redirectTo, { replace: true });
+    } catch (err: any) {
+      const status = err?.status;
+      if (status === 401) setErrorMsg("Invalid email/password or inactive employee.");
+      else if (status === 403) setErrorMsg("Forbidden. Missing CSRF token or insufficient permissions.");
+      else setErrorMsg("Login failed. Check server connection and try again.");
     }
   };
 

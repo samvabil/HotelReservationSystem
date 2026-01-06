@@ -20,6 +20,7 @@ import com.skillstorm.hotelreservationsystem.models.Employee;
 import com.skillstorm.hotelreservationsystem.services.EmployeeAdminService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
@@ -74,4 +75,10 @@ public class EmployeeController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = request.getSession(false);
+        if (session != null) session.invalidate();
+        return ResponseEntity.noContent().build();
+    }
 }

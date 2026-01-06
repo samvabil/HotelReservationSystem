@@ -1,63 +1,76 @@
-import { Box, Chip, Container, Typography, Card, CardContent, Grid } from "@mui/material";
-import { useSelector } from "react-redux";
+import { Box, Button, Container, Typography, Card, CardContent } from "@mui/material";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { clearEmployee } from "../store/employeeAuthSlice";
+import { useLogoutEmployeeMutation } from "../services/employeeAuthApi";
 import type { RootState } from "../store/store";
 
 export default function EmployeeDashboard() {
-  const { employee } = useSelector((s: RootState) => s.employeeAuth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [logoutEmployee] = useLogoutEmployeeMutation();
 
-  if (!employee) {
-    return (
-      <Container sx={{ py: 6 }}>
-        <Typography variant="h5">Not authenticated.</Typography>
-      </Container>
-    );
+  const { employee, isEmployeeAuthenticated } = useSelector(
+    (state: RootState) => state.employeeAuth
+  );
+
+  // Guard
+  if (!isEmployeeAuthenticated || !employee) {
+    sessionStorage.setItem("employeeRedirectPath", "/employee/dashboard");
+    navigate("/employee/login", { replace: true });
+    return null;
   }
 
-  const isAdmin = employee.roles.includes("ROLE_ADMIN");
+  const handleLogout = async () => {
+    try {
+      await logoutEmployee().unwrap();
+    } finally {
+      dispatch(clearEmployee());
+      navigate("/employee/login", { replace: true });
+    }
+  };
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 8 }}>
-      <Typography variant="h4" sx={{ mb: 4, fontWeight: "bold", color: "primary.main" }}>
-        Employee Dashboard
-      </Typography>
+    <Box
+      sx={{
+        minHeight: "90vh",
+        backgroundImage:
+          'linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url("https://20251117-ey-project2-group4-assets.s3.us-east-1.amazonaws.com/homepage/main.png")',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      <Container maxWidth="md">
+        <Card sx={{ border: "1px solid #333" }}>
+          <CardContent sx={{ p: 4 }}>
+            <Typography
+              variant="h4"
+              color="secondary"
+              sx={{ mb: 2, textShadow: "0px 0px 12px #00e5ff" }}
+            >
+              Employee Dashboard
+            </Typography>
 
-      <Grid container spacing={4}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card sx={{ border: "1px solid #333" }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Profile
-              </Typography>
+            <Typography sx={{ mb: 1 }}>
+              Employee ID: <strong>{employee.employeeId}</strong>
+            </Typography>
 
-              <Typography>Email: {employee.email}</Typography>
-              <Typography>Employee ID: {employee.employeeId}</Typography>
-              <Typography>Status: {employee.isActive ? "Active" : "Inactive"}</Typography>
+            <Typography sx={{ mb: 3 }}>
+              Role(s): <strong>{employee.roles.join(", ")}</strong>
+            </Typography>
 
-              <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-                {employee.roles.map((r) => (
-                  <Chip key={r} label={r.replace("ROLE_", "")} />
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {isAdmin && (
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card sx={{ border: "1px solid #333" }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Admin Actions
-                </Typography>
-                <Typography color="text.secondary">
-                  Manage employees, rooms, and reservations.
-                </Typography>
-                {/* Buttons go here later */}
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-      </Grid>
-    </Container>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
   );
 }
