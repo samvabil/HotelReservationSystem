@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Box, Button, TextField, Paper, MenuItem, Grid, 
   Accordion, AccordionSummary, AccordionDetails, 
-  Typography, FormControlLabel, Checkbox, Slider, Chip, 
+  Typography, FormControlLabel, Checkbox, Chip, 
   Select, InputLabel, FormControl, OutlinedInput
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -10,7 +10,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
 import { type RootState } from '../store/store';
 import { 

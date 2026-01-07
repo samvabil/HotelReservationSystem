@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from 'react';
 import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
-import { Button, Alert, Box } from '@mui/material';
+import { Button, Alert } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { type RootState } from '../store/store';

@@ -48,6 +48,20 @@ export default function CheckoutPage() {
   const taxes = subtotal * 0.08; 
   const total = subtotal + taxes;
 
+  useEffect(() => {
+    // If Redux has no dates (like after a refresh), set defaults immediately
+    if (!checkInDate || !checkOutDate) {
+        const defaultCheckIn = dayjs().format('YYYY-MM-DD');
+        const defaultCheckOut = dayjs().add(1, 'day').format('YYYY-MM-DD');
+        
+        dispatch(setDatesAndGuests({
+            checkIn: defaultCheckIn,
+            checkOut: defaultCheckOut,
+            guests: guestCount || 2 
+        }));
+    }
+  }, [checkInDate, checkOutDate, guestCount, dispatch]);
+
   // 3. Trigger Payment Intent (Re-runs automatically when total changes)
   useEffect(() => {
     if (total > 0 && room) {
