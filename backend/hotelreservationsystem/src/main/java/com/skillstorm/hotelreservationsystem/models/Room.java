@@ -1,29 +1,31 @@
 package com.skillstorm.hotelreservationsystem.models;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
 import java.util.List;
+
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * Represents a physical room within the hotel reservation system.
  * <p>
  * This class maps to the "rooms" collection in MongoDB. It stores the specific attributes
  * of a single room unit (such as room number and current occupancy status) and links
- * to a {@code RoomType} definition for broader categorization and pricing.
+ * to a {@code RoomTypeId} definition for broader categorization and pricing.
  * </p>
  * * @author SkillStorm
  * @version 1.0
  */
 @Document(collection = "rooms")
 public class Room {
-
     
-    public Room(String roomNumber, RoomType roomType, boolean accessible, boolean petFriendly, boolean nonSmoking,
+    public Room() {
+    }
+
+    public Room(String roomNumber, String roomTypeId, boolean accessible, boolean petFriendly, boolean nonSmoking,
             boolean occupied, List<UnavailableDate> unavailableDates) {
         this.roomNumber = roomNumber;
-        this.roomType = roomType;
+        this.roomTypeId = roomTypeId;
         this.accessible = accessible;
         this.petFriendly = petFriendly;
         this.nonSmoking = nonSmoking;
@@ -47,8 +49,7 @@ public class Room {
      * The room type object
      * 
      */
-    @DBRef
-    private RoomType roomType;
+    private String roomTypeId;
     
     /**
      * Indicates if the room meets accessibility standards (ADA compliant).
@@ -206,7 +207,7 @@ public class Room {
      */
     @Override
     public String toString() {
-        return "Room [id=" + id + ", roomNumber=" + roomNumber + ", roomTypeId=" + roomType + ", accessible="
+        return "Room [id=" + id + ", roomNumber=" + roomNumber + ", roomTypeId=" + roomTypeId + ", accessible="
                 + accessible + ", petFriendly=" + petFriendly + ", nonSmoking=" + nonSmoking + ", occupied=" + occupied
                 + ", unavailableDates=" + unavailableDates + "]";
     }
@@ -223,7 +224,7 @@ public class Room {
         int result = 1;
         result = prime * result + ((id == null) ? 0 : id.hashCode());
         result = prime * result + ((roomNumber == null) ? 0 : roomNumber.hashCode());
-        result = prime * result + ((roomType == null) ? 0 : roomType.hashCode());
+        result = prime * result + ((roomTypeId == null) ? 0 : roomTypeId.hashCode());
         result = prime * result + (accessible ? 1231 : 1237);
         result = prime * result + (petFriendly ? 1231 : 1237);
         result = prime * result + (nonSmoking ? 1231 : 1237);
@@ -258,10 +259,10 @@ public class Room {
                 return false;
         } else if (!roomNumber.equals(other.roomNumber))
             return false;
-        if (roomType == null) {
-            if (other.roomType != null)
+        if (roomTypeId == null) {
+            if (other.roomTypeId != null)
                 return false;
-        } else if (!roomType.equals(other.roomType))
+        } else if (!roomTypeId.equals(other.roomTypeId))
             return false;
         if (accessible != other.accessible)
             return false;
@@ -320,16 +321,16 @@ public class Room {
      *
      * @return The RoomType.
      */
-    public RoomType getRoomTypeId() {
-        return roomType;
+    public String getRoomTypeId() {
+        return roomTypeId;
     }
 
     /**
      * Sets the Room Type
      * @param roomType
      */
-    public void setRoomType(RoomType roomType) {
-        this.roomType = roomType;
+    public void setRoomType(String roomType) {
+        this.roomTypeId = roomType;
     }
 
     /**

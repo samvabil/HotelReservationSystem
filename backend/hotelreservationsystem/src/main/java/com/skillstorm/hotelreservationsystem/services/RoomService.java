@@ -1,17 +1,18 @@
 package com.skillstorm.hotelreservationsystem.services;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.skillstorm.hotelreservationsystem.dto.BookingSearchRequest;
 import com.skillstorm.hotelreservationsystem.dto.BookingSearchResult;
 import com.skillstorm.hotelreservationsystem.models.Room;
 import com.skillstorm.hotelreservationsystem.models.RoomType;
 import com.skillstorm.hotelreservationsystem.repositories.RoomRepository;
 import com.skillstorm.hotelreservationsystem.repositories.RoomTypeRepository;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class RoomService {
@@ -50,7 +51,8 @@ public class RoomService {
         // 3. GROUP rooms by their RoomType ID
         // Map<String, List<Room>> -> "type-123" : [Room 101, Room 102]
         Map<String, List<Room>> roomsByType = availableRooms.stream()
-            .collect(Collectors.groupingBy(room -> room.getRoomTypeId().getId()));
+            .filter(room -> room.getRoomTypeId() != null && !room.getRoomTypeId().isBlank())
+            .collect(Collectors.groupingBy(Room::getRoomTypeId));
 
         // 4. Fetch the Definitions for these types
         List<RoomType> matchingTypes = roomTypeRepository.findAllById(roomsByType.keySet());

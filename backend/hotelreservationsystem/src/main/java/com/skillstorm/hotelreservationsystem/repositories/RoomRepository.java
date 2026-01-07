@@ -1,12 +1,13 @@
 package com.skillstorm.hotelreservationsystem.repositories;
 
-import com.skillstorm.hotelreservationsystem.models.Room;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.util.List;
+import com.skillstorm.hotelreservationsystem.models.Room;
 
 @Repository
 public interface RoomRepository extends MongoRepository<Room, String> {
@@ -19,4 +20,8 @@ public interface RoomRepository extends MongoRepository<Room, String> {
 
     // 2. You can also add basic attribute filtering here if you want to optimize
     List<Room> findByAccessible(boolean accessible);
+
+    boolean existsByRoomNumber(String roomNumber);
+    
+    long countByRoomTypeId(String roomTypeId);
 }
