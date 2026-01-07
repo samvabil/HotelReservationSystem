@@ -19,6 +19,8 @@ import {
   TextField,
   Divider,
   Chip,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -109,6 +111,8 @@ export default function AdminRoomTypes() {
   const [form, setForm] = useState<RoomTypeUpsertBody>(() => emptyForm());
   const [imageUrlDraft, setImageUrlDraft] = useState("");
   const [consoleDraft, setConsoleDraft] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<AdminRoomType | null>(null);
 
   const title = useMemo(() => (editing ? "Edit Room Type" : "Create Room Type"), [editing]);
 
@@ -164,11 +168,22 @@ export default function AdminRoomTypes() {
     setOpen(false);
   };
 
-  const handleDelete = async (id: string) => {
-    const ok = window.confirm("Delete this room type? This cannot be undone.");
-    if (!ok) return;
-    await deleteRoomType(id).unwrap();
-  };
+  const requestDelete = (rt: AdminRoomType) => {
+  setPendingDelete(rt);
+  setConfirmOpen(true);
+ };
+
+ const confirmDelete = async () => {
+   if (!pendingDelete) return;
+   await deleteRoomType(pendingDelete.id).unwrap();
+   setConfirmOpen(false);
+   setPendingDelete(null);
+ };
+
+ const cancelDelete = () => {
+   setConfirmOpen(false);
+   setPendingDelete(null);
+ };
 
   const addImageUrl = () => {
     const v = imageUrlDraft.trim();
@@ -264,7 +279,7 @@ export default function AdminRoomTypes() {
                           size="small"
                           variant="outlined"
                           color="error"
-                          onClick={() => handleDelete(rt.id)}
+                          onClick={() => requestDelete(rt)}
                           disabled={deleting}
                         >
                           Delete
@@ -367,19 +382,25 @@ export default function AdminRoomTypes() {
               <Divider />
 
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
-                <TextField
-                  label="Has Jacuzzi (true/false)"
-                  value={String(form.hasJacuzzi)}
-                  onChange={(e) => setForm((p) => ({ ...p, hasJacuzzi: e.target.value === "true" }))}
-                  fullWidth
+                <FormControlLabel
+                    control={
+                    <Checkbox
+                        checked={!!form.hasJacuzzi}
+                        onChange={(e) => setForm((p) => ({ ...p, hasJacuzzi: e.target.checked }))}
+                    />
+                    }
+                    label="Has Jacuzzi"
                 />
-                <TextField
-                  label="Has Kitchen (true/false)"
-                  value={String(form.hasKitchen)}
-                  onChange={(e) => setForm((p) => ({ ...p, hasKitchen: e.target.value === "true" }))}
-                  fullWidth
+                <FormControlLabel
+                    control={
+                    <Checkbox
+                        checked={!!form.hasKitchen}
+                        onChange={(e) => setForm((p) => ({ ...p, hasKitchen: e.target.checked }))}
+                    />
+                    }
+                    label="Has Kitchen"
                 />
-              </Stack>
+                </Stack>
 
               <Divider />
 
@@ -463,6 +484,28 @@ export default function AdminRoomTypes() {
             </Button>
           </DialogActions>
         </Dialog>
+
+        <Dialog open={confirmOpen} onClose={cancelDelete} fullWidth maxWidth="xs">
+            <DialogTitle>Delete Room Type</DialogTitle>
+            <DialogContent>
+                <Typography sx={{ mt: 1 }}>
+                Are you sure you want to delete{" "}
+                <strong>{pendingDelete?.name ?? "this room type"}</strong>?
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                This cannot be undone. If rooms reference this type, the backend will block deletion.
+                </Typography>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={cancelDelete} variant="outlined">
+                Cancel
+                </Button>
+                <Button onClick={confirmDelete} variant="contained" color="error" disabled={deleting}>
+                Delete
+                </Button>
+            </DialogActions>
+        </Dialog>
+
       </Container>
     </Box>
   );

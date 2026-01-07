@@ -103,6 +103,10 @@ export default function AdminRooms() {
   const [editing, setEditing] = useState<Room | null>(null);
   const [form, setForm] = useState<RoomUpsertBody>(() => emptyRoomForm(rtList));
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [pendingDeleteLabel, setPendingDeleteLabel] = useState<string>("");
+
   const title = useMemo(() => (editing ? "Edit Room" : "Create Room"), [editing]);
 
   const openCreate = () => {
@@ -158,11 +162,25 @@ export default function AdminRooms() {
     setOpen(false);
   };
 
-  const handleDelete = async (id: string) => {
-    const ok = window.confirm("Delete this room? This cannot be undone.");
-    if (!ok) return;
-    await deleteRoom(id).unwrap();
-  };
+  const requestDelete = (room: Room) => {
+  setPendingDeleteId(room.id);
+  setPendingDeleteLabel(room.roomNumber);
+  setConfirmOpen(true);
+};
+
+const confirmDelete = async () => {
+  if (!pendingDeleteId) return;
+  await deleteRoom(pendingDeleteId).unwrap();
+  setConfirmOpen(false);
+  setPendingDeleteId(null);
+  setPendingDeleteLabel("");
+};
+
+const cancelDelete = () => {
+  setConfirmOpen(false);
+  setPendingDeleteId(null);
+  setPendingDeleteLabel("");
+};
 
   return (
     <Box sx={bgStyle}>
@@ -249,7 +267,7 @@ export default function AdminRooms() {
                             size="small"
                             variant="outlined"
                             color="error"
-                            onClick={() => handleDelete(r.id)}
+                            onClick={() => requestDelete(r)}
                             disabled={deleting}
                           >
                             Delete
@@ -351,6 +369,27 @@ export default function AdminRooms() {
             </Button>
           </DialogActions>
         </Dialog>
+
+        <Dialog open={confirmOpen} onClose={cancelDelete} fullWidth maxWidth="xs">
+            <DialogTitle>Delete Room</DialogTitle>
+            <DialogContent>
+                <Typography sx={{ mt: 1 }}>
+                Are you sure you want to delete room <strong>{pendingDeleteLabel}</strong>?
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                This cannot be undone. If the room is marked occupied, the backend will block deletion.
+                </Typography>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={cancelDelete} variant="outlined">
+                Cancel
+                </Button>
+                <Button onClick={confirmDelete} variant="contained" color="error" disabled={deleting}>
+                Delete
+                </Button>
+            </DialogActions>
+            </Dialog>
+
       </Container>
     </Box>
   );
