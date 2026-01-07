@@ -82,6 +82,18 @@ export default function Navbar() {
               Book A Room
             </Button>
 
+            <Button
+                onClick={() => navigate("/employee/login")}
+                sx={{
+                  my: 2,
+                  color: "text.secondary",
+                  fontSize: "0.85rem",
+                  textTransform: "none",
+                }}
+              >
+                Employee Portal
+              </Button>
+
             {isAuthenticated && user ? (
               // LOGGED IN VIEW
               <Box sx={{ flexGrow: 0 }}>

@@ -1,5 +1,7 @@
 package com.skillstorm.hotelreservationsystem.models;
 
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -20,13 +22,16 @@ import java.util.List;
 @Document(collection = "room_types")
 public class RoomType {
 
+    public RoomType() {
+    }
+
     /**
      * 
      * @param name
      * @param pricePerNight
      * @param numBeds
      * @param typeBed
-     * @param numBeedroom
+     * @param numBedroom
      * @param squareFeet
      * @param capacity
      * @param hasJacuzzi
@@ -36,14 +41,14 @@ public class RoomType {
      * @param consoles
      * @param images
      */
-    public RoomType(String name, double pricePerNight, int numBeds, String typeBed, int numBeedroom, int squareFeet,
+    public RoomType(String name, double pricePerNight, int numBeds, String typeBed, int numBedroom, int squareFeet,
             int capacity, boolean hasJacuzzi, boolean hasKitchen, int levelOfPc, int numPcs, List<String> consoles,
             List<String> images) {
         this.name = name;
         this.pricePerNight = pricePerNight;
         this.numBeds = numBeds;
         this.typeBed = typeBed;
-        this.numBeedroom = numBeedroom;
+        this.numBedroom = numBedroom;
         this.squareFeet = squareFeet;
         this.capacity = capacity;
         this.hasJacuzzi = hasJacuzzi;
@@ -86,8 +91,7 @@ public class RoomType {
     /**
      * The number of separate bedrooms within the suite.
      */
-    @Field("numBedroom")
-    private int numBeedroom; // kept variable name as-is from your snippet
+    private int numBedroom; // kept variable name as-is from your snippet
     
     // --- Specs ---
 
@@ -147,7 +151,7 @@ public class RoomType {
     @Override
     public String toString() {
         return "RoomType [id=" + id + ", name=" + name + ", pricePerNight=" + pricePerNight + ", numBeds=" + numBeds
-                + ", typeBed=" + typeBed + ", numBeedroom=" + numBeedroom + ", squareFeet=" + squareFeet + ", capacity="
+                + ", typeBed=" + typeBed + ", numBedroom=" + numBedroom + ", squareFeet=" + squareFeet + ", capacity="
                 + capacity + ", hasJacuzzi=" + hasJacuzzi + ", hasKitchen=" + hasKitchen + ", levelOfPc=" + levelOfPc
                 + ", numPcs=" + numPcs + ", consoles=" + consoles + ", images=" + images + "]";
     }
@@ -169,7 +173,7 @@ public class RoomType {
         result = prime * result + (int) (temp ^ (temp >>> 32));
         result = prime * result + numBeds;
         result = prime * result + ((typeBed == null) ? 0 : typeBed.hashCode());
-        result = prime * result + numBeedroom;
+        result = prime * result + numBedroom;
         result = prime * result + squareFeet;
         result = prime * result + capacity;
         result = prime * result + (hasJacuzzi ? 1231 : 1237);
@@ -216,7 +220,7 @@ public class RoomType {
                 return false;
         } else if (!typeBed.equals(other.typeBed))
             return false;
-        if (numBeedroom != other.numBeedroom)
+        if (numBedroom != other.numBedroom)
             return false;
         if (squareFeet != other.squareFeet)
             return false;
@@ -340,17 +344,17 @@ public class RoomType {
      *
      * @return The number of bedrooms.
      */
-    public int getNumBeedroom() {
-        return numBeedroom;
+    public int getNumBedroom() {
+        return numBedroom;
     }
 
     /**
      * Sets the number of bedrooms.
      *
-     * @param numBeedroom The new number of bedrooms.
+     * @param numBedroom The new number of bedrooms.
      */
-    public void setNumBeedroom(int numBeedroom) {
-        this.numBeedroom = numBeedroom;
+    public void setNumBedroom(int numBedroom) {
+        this.numBedroom = numBedroom;
     }
 
     /**

@@ -1,17 +1,18 @@
 package com.skillstorm.hotelreservationsystem.services;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.skillstorm.hotelreservationsystem.dto.BookingSearchRequest;
 import com.skillstorm.hotelreservationsystem.dto.BookingSearchResult;
 import com.skillstorm.hotelreservationsystem.models.Room;
 import com.skillstorm.hotelreservationsystem.models.RoomType;
 import com.skillstorm.hotelreservationsystem.repositories.RoomRepository;
 import com.skillstorm.hotelreservationsystem.repositories.RoomTypeRepository;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class RoomService {

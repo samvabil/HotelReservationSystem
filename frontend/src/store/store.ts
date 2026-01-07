@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import userAuthReducer from './userAuthSlice';
+import employeeAuthReducer from "./employeeAuthSlice";
 import { apiSlice } from './apiSlice';
 import bookingReducer from './bookingSlice';
 
@@ -7,6 +8,7 @@ export const store = configureStore({
   reducer: {
     // STATE
     userAuth: userAuthReducer,
+    employeeAuth: employeeAuthReducer,
     booking: bookingReducer,
     //API
     [apiSlice.reducerPath]: apiSlice.reducer
