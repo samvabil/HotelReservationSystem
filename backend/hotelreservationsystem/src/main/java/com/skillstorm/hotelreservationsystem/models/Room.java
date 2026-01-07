@@ -65,7 +65,6 @@ public class Room {
      */
     @Transient
     private RoomType roomType;
-    private String roomTypeId;
     
     /**
      * Indicates if the room meets accessibility standards (ADA compliant).
