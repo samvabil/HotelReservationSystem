@@ -113,6 +113,7 @@ export default function AdminRoomTypes() {
   const [consoleDraft, setConsoleDraft] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<AdminRoomType | null>(null);
+  const [formError, setFormError] = useState<string>("");
 
   const title = useMemo(() => (editing ? "Edit Room Type" : "Create Room Type"), [editing]);
 
@@ -121,6 +122,7 @@ export default function AdminRoomTypes() {
     setForm(emptyForm());
     setImageUrlDraft("");
     setConsoleDraft("");
+    setFormError("");
     setOpen(true);
   };
 
@@ -143,6 +145,7 @@ export default function AdminRoomTypes() {
     });
     setImageUrlDraft("");
     setConsoleDraft("");
+    setFormError("");
     setOpen(true);
   };
 
@@ -154,19 +157,61 @@ export default function AdminRoomTypes() {
   };
 
   const handleSave = async () => {
-    const body: RoomTypeUpsertBody = {
-      ...form,
-      consoles: (form.consoles ?? []).filter(Boolean),
-      images: (form.images ?? []).filter(Boolean),
-    };
+  setFormError("");
 
+  // Basic required validation (match your likely backend rules)
+  const name = form.name.trim();
+  const typeBed = form.typeBed.trim();
+
+  if (!name) {
+    setFormError("Room type name is required.");
+    return;
+  }
+  if (!typeBed) {
+    setFormError("Bed type is required (example: Queen, King).");
+    return;
+  }
+  if (!Number.isFinite(form.pricePerNight) || form.pricePerNight <= 0) {
+    setFormError("Price per night must be greater than 0.");
+    return;
+  }
+  if (!Number.isFinite(form.capacity) || form.capacity <= 0) {
+    setFormError("Capacity must be at least 1.");
+    return;
+  }
+  if (!Number.isFinite(form.numBeds) || form.numBeds <= 0) {
+    setFormError("Beds must be at least 1.");
+    return;
+  }
+  if (!Number.isFinite(form.numBedroom) || form.numBedroom <= 0) {
+    setFormError("Bedrooms must be at least 1.");
+    return;
+  }
+
+  const body: RoomTypeUpsertBody = {
+    ...form,
+    name,
+    typeBed,
+    consoles: (form.consoles ?? []).map((c) => c.trim()).filter(Boolean),
+    images: (form.images ?? []).map((u) => u.trim()).filter(Boolean),
+  };
+
+  try {
     if (editing) {
       await updateRoomType({ id: editing.id, body }).unwrap();
     } else {
       await createRoomType(body).unwrap();
     }
     setOpen(false);
-  };
+  } catch (e: any) {
+    // RTK Query unwrap throws an object that often includes data.message
+    const msg =
+      e?.data?.message ||
+      e?.data?.error ||
+      "Failed to save room type. Please check your inputs.";
+    setFormError(msg);
+  }
+};
 
   const requestDelete = (rt: AdminRoomType) => {
   setPendingDelete(rt);
@@ -174,11 +219,15 @@ export default function AdminRoomTypes() {
  };
 
  const confirmDelete = async () => {
-   if (!pendingDelete) return;
-   await deleteRoomType(pendingDelete.id).unwrap();
-   setConfirmOpen(false);
-   setPendingDelete(null);
- };
+  if (!pendingDelete) return;
+  try {
+    await deleteRoomType(pendingDelete.id).unwrap();
+    setConfirmOpen(false);
+    setPendingDelete(null);
+  } catch (e: any) {
+    alert(e?.data?.message || e?.data?.error || "Delete failed.");
+  }
+};
 
  const cancelDelete = () => {
    setConfirmOpen(false);
@@ -306,7 +355,21 @@ export default function AdminRoomTypes() {
 
           <DialogContent>
             <Stack spacing={2} sx={{ mt: 1 }}>
+              {formError && (
+                <Typography
+                    color="error"
+                    sx={{
+                    border: "1px solid",
+                    borderColor: "error.main",
+                    p: 1.5,
+                    borderRadius: 1,
+                    }}
+                >
+                    {formError}
+                </Typography>
+                )}
               <TextField
+                required
                 label="Name"
                 value={form.name}
                 onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
@@ -315,6 +378,7 @@ export default function AdminRoomTypes() {
 
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                 <TextField
+                  required
                   label="Price Per Night"
                   type="number"
                   value={form.pricePerNight}
@@ -322,6 +386,7 @@ export default function AdminRoomTypes() {
                   fullWidth
                 />
                 <TextField
+                  required
                   label="Capacity"
                   type="number"
                   value={form.capacity}
@@ -334,6 +399,7 @@ export default function AdminRoomTypes() {
 
               <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
                 <TextField
+                  required
                   label="Beds"
                   type="number"
                   value={form.numBeds}
@@ -341,12 +407,14 @@ export default function AdminRoomTypes() {
                   fullWidth
                 />
                 <TextField
+                  required
                   label="Bed Type"
                   value={form.typeBed}
                   onChange={(e) => setForm((p) => ({ ...p, typeBed: e.target.value }))}
                   fullWidth
                 />
                 <TextField
+                  required
                   label="Bedrooms"
                   type="number"
                   value={form.numBedroom}
