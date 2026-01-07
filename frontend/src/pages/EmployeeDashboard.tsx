@@ -1,4 +1,4 @@
-import { Box, Button, Container, Typography, Card, CardContent } from "@mui/material";
+import { Box, Button, Container, Typography, Card, CardContent, Stack } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { clearEmployee } from "../store/employeeAuthSlice";
@@ -20,6 +20,8 @@ export default function EmployeeDashboard() {
     navigate("/employee/login", { replace: true });
     return null;
   }
+
+  const isAdmin = employee.roles?.includes("ROLE_ADMIN");
 
   const handleLogout = async () => {
     try {
@@ -58,8 +60,19 @@ export default function EmployeeDashboard() {
             </Typography>
 
             <Typography sx={{ mb: 3 }}>
-              Role(s): <strong>{employee.roles.join(", ")}</strong>
+              Role: <strong>{employee.roles.join(", ")}</strong>
             </Typography>
+
+            {isAdmin && (
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>
+                <Button variant="contained" onClick={() => navigate("/employee/admin/room-types")}>
+                  Manage Room Types
+                </Button>
+                <Button variant="contained" onClick={() => navigate("/employee/admin/rooms")}>
+                  Manage Rooms
+                </Button>
+              </Stack>
+            )}
 
             <Button
               variant="outlined"

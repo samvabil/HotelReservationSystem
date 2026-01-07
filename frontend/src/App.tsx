@@ -13,6 +13,8 @@ import EmployeeLogin from "./pages/EmployeeLogin";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import RequireAuth from "./components/RequireAuth";
 import CheckoutPage from "./pages/CheckoutPage";
+import AdminRoomTypes from "./pages/AdminRoomTypes";
+import AdminRooms from "./pages/AdminRooms";
 
 // Placeholder components for routes we haven't built yet
 const Placeholder = ({ title }: { title: string }) => (
@@ -64,6 +66,8 @@ function App() {
             <Route path="/employee/login" element={<EmployeeLogin />} />
             <Route path="/employee" element={<EmployeeDashboard />} />
             <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
+            <Route path="/employee/admin/room-types" element={<AdminRoomTypes />} />
+            <Route path="/employee/admin/rooms" element={<AdminRooms />} />
             <Route 
               path="/checkout/:roomId" 
               element={

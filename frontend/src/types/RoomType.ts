@@ -7,6 +7,7 @@ export interface RoomType {
   numBeds: number;
   typeBed: string;       // "King", "Queen"
   numBeedroom: number;   // Mapped from Java 'numBeedroom'
+  numBedroom?: number;
   
   // Specs
   squareFeet: number;
