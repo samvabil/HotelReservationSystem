@@ -69,7 +69,7 @@ public class RoomService {
             .filter(type -> request.getMaxPrice() == null || type.getPricePerNight() <= request.getMaxPrice())
             .filter(type -> request.getGuestCount() == null || type.getCapacity() >= request.getGuestCount())
             .filter(type -> request.getMinBeds() == null || type.getNumBeds() >= request.getMinBeds())
-            .filter(type -> request.getMinBedrooms() == null || type.getNumBeedroom() >= request.getMinBedrooms())
+            .filter(type -> request.getMinBedrooms() == null || type.getNumBedroom() >= request.getMinBedrooms())
             .filter(type -> request.getHasJacuzzi() == null || type.isHasJacuzzi() == request.getHasJacuzzi())
             .filter(type -> request.getPcCount() == null || type.getNumPcs() >= request.getPcCount())
             .filter(type -> request.getPcTier() == null || isTierCompatible(type.getLevelOfPc(), request.getPcTier()))

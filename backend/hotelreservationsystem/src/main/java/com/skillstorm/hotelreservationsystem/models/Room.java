@@ -1,19 +1,15 @@
 package com.skillstorm.hotelreservationsystem.models;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * Represents a physical room within the hotel reservation system.
@@ -65,7 +61,6 @@ public class Room {
      */
     @Transient
     private RoomType roomType;
-    private String roomTypeId;
     
     /**
      * Indicates if the room meets accessibility standards (ADA compliant).
