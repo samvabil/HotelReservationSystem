@@ -4,9 +4,6 @@ import java.util.List;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-
-import java.util.List;
 
 /**
  * Represents a category or configuration of rooms available in the hotel.
