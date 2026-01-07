@@ -1,9 +1,10 @@
 package com.skillstorm.hotelreservationsystem.models;
 
+import java.time.LocalDate;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
-import java.time.LocalDate;
 
 /**
  * Represents a booking transaction within the hotel reservation system.
