@@ -1,5 +1,14 @@
 package com.skillstorm.hotelreservationsystem.models;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -45,10 +54,17 @@ public class Room {
      */
     private String roomNumber;
 
+
+    @Field("roomTypeId") 
+    @JsonIgnore 
+    private String roomTypeId;
+
     /**
      * The room type object
      * 
      */
+    @Transient
+    private RoomType roomType;
     private String roomTypeId;
     
     /**
@@ -280,6 +296,19 @@ public class Room {
         return true;
     }
 
+
+    @JsonProperty("roomTypeId")
+    public RoomType getRoomType() {
+        return roomType;
+    }
+
+    public void setRoomType(RoomType roomType) {
+        this.roomType = roomType;
+        if (roomType != null) {
+            this.roomTypeId = roomType.getId();
+        }
+    }
+
     /**
      * Gets the unique identifier of the room.
      *
@@ -329,8 +358,8 @@ public class Room {
      * Sets the Room Type
      * @param roomType
      */
-    public void setRoomType(String roomType) {
-        this.roomTypeId = roomType;
+    public void setRoomTypeID(String roomTypeId) {
+        this.roomTypeId = roomTypeId;
     }
 
     /**

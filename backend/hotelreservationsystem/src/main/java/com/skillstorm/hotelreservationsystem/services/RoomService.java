@@ -26,8 +26,15 @@ public class RoomService {
     }
 
     public Room getRoomById(String id) {
-        return roomRepository.findById(id)
+        Room room = roomRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Room not found with ID: " + id));
+
+        if (room.getRoomTypeId() != null) {
+            RoomType type = roomTypeRepository.findById(room.getRoomTypeId()).orElse(null);
+            room.setRoomType(type); // This fills the @Transient field
+        }
+
+        return room;
     }
 
     // CHANGED: Return type is now List<RoomTypeSearchResult>
@@ -51,8 +58,7 @@ public class RoomService {
         // 3. GROUP rooms by their RoomType ID
         // Map<String, List<Room>> -> "type-123" : [Room 101, Room 102]
         Map<String, List<Room>> roomsByType = availableRooms.stream()
-            .filter(room -> room.getRoomTypeId() != null && !room.getRoomTypeId().isBlank())
-            .collect(Collectors.groupingBy(Room::getRoomTypeId));
+            .collect(Collectors.groupingBy(room -> room.getRoomTypeId()));
 
         // 4. Fetch the Definitions for these types
         List<RoomType> matchingTypes = roomTypeRepository.findAllById(roomsByType.keySet());

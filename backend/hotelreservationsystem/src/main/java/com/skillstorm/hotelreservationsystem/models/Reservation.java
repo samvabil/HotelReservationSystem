@@ -1,6 +1,7 @@
 package com.skillstorm.hotelreservationsystem.models;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.time.LocalDate;
@@ -19,10 +20,10 @@ import java.time.LocalDate;
 public class Reservation {
     
 
-    public Reservation(User user, Room room, LocalDate checkIn, LocalDate checkOut, int guestCount, double totalPrice,
+    public Reservation(String userId, String roomId, LocalDate checkIn, LocalDate checkOut, int guestCount, double totalPrice,
             ReservationStatus status, String paymentIntentId) {
-        this.user = user;
-        this.room = room;
+        this.userId = userId;
+        this.roomId = roomId;
         this.checkIn = checkIn;
         this.checkOut = checkOut;
         this.guestCount = guestCount;
@@ -41,14 +42,17 @@ public class Reservation {
     /**
      *  User who made the reservation
      */
-    @DBRef
+    @Transient
     private User user;
 
     /**
      * The room that this reservation is for
      */
-    @DBRef
+    @Transient
     private Room room; 
+
+    private String userId;
+    private String roomId;
 
     /**
      * The scheduled arrival date for the guest.
@@ -222,41 +226,22 @@ public class Reservation {
         this.id = id;
     }
 
-    /**
-     * Gets the user who made the reservation.
-     *
-     * @return The user.
-     */
-    public User getUser() {
-        return user;
-    }
-
-    /**
-     * Sets the user making the reservation.
-     *
-     * @param user The new user ID.
-     */
+    public User getUser() { return user; }
     public void setUser(User user) {
         this.user = user;
+        if (user != null) this.userId = user.getId();
     }
 
-    /**
-     * Gets the reserved room.
-     *
-     * @return The room.
-     */
-    public Room getRoom() {
-        return room;
-    }
-
-    /**
-     * Sets the reserved room.
-     *
-     * @param room The new room.
-     */
+    public Room getRoom() { return room; }
     public void setRoom(Room room) {
         this.room = room;
+        if (room != null) this.roomId = room.getId();
     }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+    public String getRoomId() { return roomId; }
+    public void setRoomId(String roomId) { this.roomId = roomId; }
 
     /**
      * Gets the check-in date.
