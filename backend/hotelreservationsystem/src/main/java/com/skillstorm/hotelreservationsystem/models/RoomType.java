@@ -2,6 +2,8 @@ package com.skillstorm.hotelreservationsystem.models;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+
 import java.util.List;
 
 /**
@@ -84,6 +86,7 @@ public class RoomType {
     /**
      * The number of separate bedrooms within the suite.
      */
+    @Field("numBedroom")
     private int numBeedroom; // kept variable name as-is from your snippet
     
     // --- Specs ---
