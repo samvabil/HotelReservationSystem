@@ -14,53 +14,55 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
+    private final RoomTypeRepository roomTypeRepository;
 
-    public ReservationService(ReservationRepository reservationRepository, RoomRepository roomRepository, UserRepository userRepository) {
+    public ReservationService(ReservationRepository reservationRepository, RoomRepository roomRepository, UserRepository userRepository, RoomTypeRepository roomTypeRepository) {
         this.reservationRepository = reservationRepository;
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
+        this.roomTypeRepository = roomTypeRepository;
     }
 
     @Transactional
     public Reservation createReservation(ReservationRequest request, String userEmail) {
-        // 1. Find the Room
+        // 1. Fetch Entities
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        // 2. Find the User (from the logged-in session)
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 3. Create the Reservation
+        // 2. Fetch Price (Need to load RoomType manualy now!)
+        RoomType type = roomTypeRepository.findById(room.getRoomTypeId())
+                .orElseThrow(() -> new RuntimeException("Room Type not found"));
+        room.setRoomType(type); // Attach for consistency
+
+        // 3. Create Reservation (Using STRING IDs)
         Reservation reservation = new Reservation(
-                user,
-                room,
+                user.getId(),
+                room.getId(),
                 request.getCheckIn(),
                 request.getCheckOut(),
                 request.getGuestCount(),
-                // Calculate price again server-side for security, or pass it in
-                room.getRoomTypeId().getPricePerNight(), 
+                type.getPricePerNight(), // Use price from loaded type
                 Reservation.ReservationStatus.CONFIRMED,
                 request.getPaymentIntentId()
         );
         
+        // 4. Save to DB (Saves "userId": "..." and "roomId": "...")
         Reservation savedReservation = reservationRepository.save(reservation);
 
-        // 4. BLOCK THE DATES on the Room
+        // 5. CRITICAL: Attach Objects for Frontend
+        // This ensures the returned JSON has "user": {...} and "room": {...}
+        savedReservation.setUser(user);
+        savedReservation.setRoom(room);
+
+        // 6. Update Room Dates
         if (room.getUnavailableDates() == null) {
             room.setUnavailableDates(new ArrayList<>());
         }
         room.getUnavailableDates().add(new Room.UnavailableDate(request.getCheckIn(), request.getCheckOut()));
         roomRepository.save(room);
-
-        // 5. Update User's Stripe ID (Simplistic approach)
-        // In a real app, you'd extract this 'cus_...' ID from the Stripe PaymentIntent object
-        if (user.getStripeCustomerId() == null) {
-             // For now, we just placeholder this logic. 
-             // To do this for real, we need to ask Stripe "Who is the customer for this Intent?"
-             // user.setStripeCustomerId(stripeCustomerIdFromIntent);
-             // userRepository.save(user);
-        }
 
         return savedReservation;
     }

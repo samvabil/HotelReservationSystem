@@ -1,8 +1,14 @@
 package com.skillstorm.hotelreservationsystem.models;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -20,10 +26,10 @@ import java.util.List;
 public class Room {
 
     
-    public Room(String roomNumber, RoomType roomType, boolean accessible, boolean petFriendly, boolean nonSmoking,
+    public Room(String roomNumber, String roomTypeId, boolean accessible, boolean petFriendly, boolean nonSmoking,
             boolean occupied, List<UnavailableDate> unavailableDates) {
         this.roomNumber = roomNumber;
-        this.roomType = roomType;
+        this.roomTypeId = roomTypeId;
         this.accessible = accessible;
         this.petFriendly = petFriendly;
         this.nonSmoking = nonSmoking;
@@ -43,11 +49,16 @@ public class Room {
      */
     private String roomNumber;
 
+
+    @Field("roomTypeId") 
+    @JsonIgnore 
+    private String roomTypeId;
+
     /**
      * The room type object
      * 
      */
-    @DBRef
+    @Transient
     private RoomType roomType;
     
     /**
@@ -279,6 +290,19 @@ public class Room {
         return true;
     }
 
+
+    @JsonProperty("roomTypeId")
+    public RoomType getRoomType() {
+        return roomType;
+    }
+
+    public void setRoomType(RoomType roomType) {
+        this.roomType = roomType;
+        if (roomType != null) {
+            this.roomTypeId = roomType.getId();
+        }
+    }
+
     /**
      * Gets the unique identifier of the room.
      *
@@ -320,16 +344,16 @@ public class Room {
      *
      * @return The RoomType.
      */
-    public RoomType getRoomTypeId() {
-        return roomType;
+    public String getRoomTypeId() {
+        return roomTypeId;
     }
 
     /**
      * Sets the Room Type
      * @param roomType
      */
-    public void setRoomType(RoomType roomType) {
-        this.roomType = roomType;
+    public void setRoomTypeID(String roomTypeId) {
+        this.roomTypeId = roomTypeId;
     }
 
     /**
