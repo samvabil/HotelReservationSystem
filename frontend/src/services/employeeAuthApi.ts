@@ -43,4 +43,4 @@ export const employeeAuthApi = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useStartEmployeeSessionMutation, useLazyGetEmployeeMeQuery, useLogoutEmployeeMutation } = employeeAuthApi;
+export const { useStartEmployeeSessionMutation, useLazyGetEmployeeMeQuery, useGetEmployeeMeQuery, useLogoutEmployeeMutation } = employeeAuthApi;

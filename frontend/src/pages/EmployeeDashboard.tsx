@@ -14,14 +14,7 @@ export default function EmployeeDashboard() {
     (state: RootState) => state.employeeAuth
   );
 
-  // Guard
-  if (!isEmployeeAuthenticated || !employee) {
-    sessionStorage.setItem("employeeRedirectPath", "/employee/dashboard");
-    navigate("/employee/login", { replace: true });
-    return null;
-  }
-
-  const isAdmin = employee.roles?.includes("ROLE_ADMIN");
+  const isAdmin = employee?.roles?.includes("ROLE_ADMIN");
 
   const handleLogout = async () => {
     try {
