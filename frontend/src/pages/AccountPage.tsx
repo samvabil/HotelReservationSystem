@@ -119,7 +119,7 @@ export default function AccountPage() {
                                 <CardContent>
                                     <Grid container spacing={2} alignItems="center">
                                         
-                                        {/* Left: Info - UPDATED SYNTAX */}
+                                        {/* Left: Info */}
                                         <Grid size={{ xs: 12, md: 8 }}>
                                             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1 }}>
                                                 <Typography variant="h6" fontWeight="bold">
@@ -142,20 +142,22 @@ export default function AccountPage() {
                                             </Typography>
                                         </Grid>
 
-                                        {/* Right: Actions - UPDATED SYNTAX */}
+                                        {/* Right: Actions */}
                                         <Grid size={{ xs: 12, md: 4 }} sx={{ textAlign: 'right' }}>
-                                            <Typography variant="h6" color="primary" sx={{ mb: 2 }}>
+                                            <Typography variant="h6" sx={{ mb: 2 }}>
                                                 ${res.totalPrice.toFixed(2)}
                                             </Typography>
                                             
                                             {!isStayCanceled && !isStayPast && (
                                                 <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
-                                                    <Button variant="outlined" startIcon={<EditIcon />} size="small">
+                                                    {/* CHANGED TO CONTAINED */}
+                                                    <Button variant="contained" startIcon={<EditIcon />} size="small">
                                                         Edit
                                                     </Button>
                                                     
+                                                    {/* CHANGED TO CONTAINED */}
                                                     <Button 
-                                                        variant="outlined" 
+                                                        variant="contained" 
                                                         color="error" 
                                                         startIcon={<DeleteIcon />} 
                                                         size="small"
