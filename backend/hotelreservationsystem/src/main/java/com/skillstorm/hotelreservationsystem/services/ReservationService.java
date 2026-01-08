@@ -44,6 +44,11 @@ public class ReservationService {
                 .orElseThrow(() -> new RuntimeException("Room Type not found"));
         room.setRoomType(type); // Attach for consistency
 
+        //  CALCULATE TOTAL PRICE 
+        long nights = ChronoUnit.DAYS.between(request.getCheckIn(), request.getCheckOut());
+        
+        double totalPrice = type.getPricePerNight() * nights;
+
         // 3. Create Reservation (Using STRING IDs)
         Reservation reservation = new Reservation(
                 user.getId(),
@@ -51,7 +56,7 @@ public class ReservationService {
                 request.getCheckIn(),
                 request.getCheckOut(),
                 request.getGuestCount(),
-                type.getPricePerNight(), // Use price from loaded type
+                totalPrice, // Use price from loaded type
                 Reservation.ReservationStatus.CONFIRMED,
                 request.getPaymentIntentId()
         );
