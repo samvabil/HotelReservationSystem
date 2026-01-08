@@ -21,12 +21,14 @@ public class ReservationService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
     private final RoomTypeRepository roomTypeRepository;
+    private final EmailService emailService;
 
-    public ReservationService(ReservationRepository reservationRepository, RoomRepository roomRepository, UserRepository userRepository, RoomTypeRepository roomTypeRepository) {
+    public ReservationService(ReservationRepository reservationRepository, RoomRepository roomRepository, UserRepository userRepository, RoomTypeRepository roomTypeRepository, EmailService emailService) {
         this.reservationRepository = reservationRepository;
         this.roomRepository = roomRepository;
         this.userRepository = userRepository;
         this.roomTypeRepository = roomTypeRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -75,6 +77,13 @@ public class ReservationService {
         }
         room.getUnavailableDates().add(new Room.UnavailableDate(request.getCheckIn(), request.getCheckOut()));
         roomRepository.save(room);
+
+        try {
+            emailService.sendReservationConfirmation(userEmail, savedReservation);
+        } catch (Exception e) {
+            // Log error but don't fail the reservation just because email failed
+            System.err.println("Failed to send email: " + e.getMessage());
+        }
 
         return savedReservation;
     }
@@ -165,6 +174,18 @@ public class ReservationService {
             
             roomRepository.save(room);
             reservationRepository.save(r);
+
+            try {
+                // Ensure User is attached so we can get the email/name
+                User user = userRepository.findById(r.getUserId()).orElse(null);
+                if (user != null) {
+                    r.setUser(user);
+                    r.setRoom(room); // Ensure room is attached for the email body
+                    emailService.sendCancellationConfirmation(user.getEmail(), r);
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to send cancellation email: " + e.getMessage());
+            }
         }
     }
 
@@ -184,25 +205,26 @@ public class ReservationService {
                 date.getStart().equals(r.getCheckIn()) && date.getEnd().equals(r.getCheckOut())
             );
 
-            // 2. Check if NEW dates are available
+            // 2. Check availability
             boolean isAvailable = roomRepository.findAvailableRooms(request.getCheckIn(), request.getCheckOut())
                     .stream().anyMatch(availableRoom -> availableRoom.getId().equals(room.getId()));
 
             if (!isAvailable) {
-                // Revert: Put the old dates back if new ones fail!
+                // Revert
                 room.getUnavailableDates().add(new Room.UnavailableDate(r.getCheckIn(), r.getCheckOut()));
                 roomRepository.save(room);
                 throw new RuntimeException("New dates are not available.");
             }
 
-            // 3. Success: Set new dates
+            // 3. Set new dates
             r.setCheckIn(request.getCheckIn());
             r.setCheckOut(request.getCheckOut());
             
-            // 4. Update Price (Recalculate based on new nights)
+            // 4. Update Price
             RoomType type = roomTypeRepository.findById(room.getRoomTypeId()).orElseThrow();
             long nights = java.time.temporal.ChronoUnit.DAYS.between(request.getCheckIn(), request.getCheckOut());
-            r.setTotalPrice(type.getPricePerNight() * nights); // Simple price update
+            if (nights < 1) nights = 1;
+            r.setTotalPrice(type.getPricePerNight() * nights);
 
             // 5. Block NEW dates
             room.getUnavailableDates().add(new Room.UnavailableDate(request.getCheckIn(), request.getCheckOut()));
@@ -212,6 +234,29 @@ public class ReservationService {
         // B. Update Guest Count
         r.setGuestCount(request.getGuestCount());
 
-        return reservationRepository.save(r);
+        Reservation savedReservation = reservationRepository.save(r);
+
+        // --- EMAIL NOTIFICATION LOGIC ---
+        try {
+            // 1. Fetch User (Required for Email Address)
+            User user = userRepository.findById(r.getUserId()).orElseThrow();
+            r.setUser(user);
+
+            // 2. Ensure Room details are fully loaded (Required for Room Name)
+            // If dates didn't change, we might not have fetched 'type' yet, so we verify here
+            if (room.getRoomType() == null) {
+                RoomType type = roomTypeRepository.findById(room.getRoomTypeId()).orElse(null);
+                room.setRoomType(type);
+            }
+            r.setRoom(room);
+
+            // 3. Send Email
+            emailService.sendUpdateConfirmation(user.getEmail(), r);
+            
+        } catch (Exception e) {
+            System.err.println("Failed to send update email: " + e.getMessage());
+        }
+
+        return savedReservation;
     }
 }
