@@ -191,7 +191,7 @@ export default function AccountPage() {
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Are you sure you want to cancel this booking? This action cannot be undone and your room will be released immediately.
+                        Are you sure you want to cancel this booking? This action cannot be undone and your room will be released immediately. You will be refuned if you cancel 72 hours or more before checkin.
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>

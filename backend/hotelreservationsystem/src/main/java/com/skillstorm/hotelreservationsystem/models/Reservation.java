@@ -110,7 +110,12 @@ public class Reservation {
         /**
          * The reservation was cancelled and the payment has been returned to the user.
          */
-        REFUNDED
+        REFUNDED,
+
+        /**
+         * The reservation happend in the past.
+         */
+        COMPLETED
     }
 
     // --- Overrides ---

@@ -85,7 +85,7 @@ public class ReservationService {
             Room room = roomRepository.findById(r.getRoomId()).orElse(null);
             if (room != null) {
                 // We need the RoomType for the name/image/price
-                if (room.getRoomType() != null) {
+                if (room.getRoomTypeId() != null) {
                     RoomType type = roomTypeRepository.findById(room.getRoomTypeId()).orElse(null);
                     room.setRoomType(type);
                 }
