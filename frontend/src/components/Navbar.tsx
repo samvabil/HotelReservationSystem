@@ -82,6 +82,13 @@ export default function Navbar() {
               Book A Room
             </Button>
 
+            <Button 
+                onClick={() => navigate('/account')}
+                sx={{ my: 2, color: 'white', display: 'block' }}
+            >
+              My Account
+            </Button>
+
             <Button
                 onClick={() => navigate("/employee/login")}
                 sx={{

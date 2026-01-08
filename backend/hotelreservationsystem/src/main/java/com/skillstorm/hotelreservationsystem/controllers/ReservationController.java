@@ -33,9 +33,7 @@ public class ReservationController {
 
     @GetMapping("/my-reservations")
     public List<Reservation> getMyReservations(@AuthenticationPrincipal OAuth2User principal) {
-        // Use hardcoded email if testing without login, otherwise: principal.getAttribute("email")
-        String email = "anthony@example.com"; 
-        return reservationService.getReservationsByUser(email);
+        return reservationService.getReservationsByUser(principal.getAttribute("email"));
     }
 
     @PutMapping("/{id}")

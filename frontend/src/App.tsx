@@ -13,6 +13,7 @@ import EmployeeLogin from "./pages/EmployeeLogin";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import RequireAuth from "./components/RequireAuth";
 import CheckoutPage from "./pages/CheckoutPage";
+import AccountPage from "./pages/AccountPage";
 
 // Placeholder components for routes we haven't built yet
 const Placeholder = ({ title }: { title: string }) => (
@@ -59,18 +60,18 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/book" element={<Book/>} />
-            <Route path="/account" element={<Placeholder title="My Account" />} />
+            <Route path="/account" element={<AccountPage />} />
             <Route path="/login-success" element={<LoginSuccess />} />
             <Route path="/employee/login" element={<EmployeeLogin />} />
             <Route path="/employee" element={<EmployeeDashboard />} />
             <Route path="/employee/dashboard" element={<EmployeeDashboard />} />
-            <Route 
-              path="/checkout/:roomId" 
-              element={
+            <Route path="/checkout/:roomId" element={
                 <RequireAuth>
                   <CheckoutPage />
                 </RequireAuth>
-              } 
+              }
+            
+               
             />
           </Routes>
         </Box>
