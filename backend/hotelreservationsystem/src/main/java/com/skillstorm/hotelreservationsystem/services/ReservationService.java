@@ -3,9 +3,14 @@ package com.skillstorm.hotelreservationsystem.services;
 import com.skillstorm.hotelreservationsystem.dto.ReservationRequest;
 import com.skillstorm.hotelreservationsystem.models.*;
 import com.skillstorm.hotelreservationsystem.repositories.*;
+import com.stripe.model.Refund;
+import com.stripe.param.RefundCreateParams;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,21 +101,57 @@ public class ReservationService {
     }
 
     // 2. CANCEL RESERVATION
-    @Transactional
+   @Transactional
     public void cancelReservation(String reservationId) {
         Reservation r = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
-        // Only cancel if not already cancelled
-        if (r.getStatus() != Reservation.ReservationStatus.CANCELLED) {
+        if (r.getStatus() == Reservation.ReservationStatus.CONFIRMED) {
             
-            // 1. Update Status
-            r.setStatus(Reservation.ReservationStatus.CANCELLED);
-            
-            // 2. Free up the Room Dates
+            // 1. Calculate time until Check-in
+            long hoursUntilCheckIn = ChronoUnit.HOURS.between(
+                    LocalDateTime.now(), 
+                    r.getCheckIn().atStartOfDay()
+            );
+
+            // 2. 72-Hour Rule Check
+            if (hoursUntilCheckIn >= 72) {
+                
+                String pid = r.getPaymentIntentId();
+
+                if (pid != null && pid.startsWith("pi_test")) {
+                    // Skip Stripe, just update DB
+                    System.out.println("Test Reservation Canceled. Skipping Stripe Refund for: " + pid);
+                    r.setStatus(Reservation.ReservationStatus.REFUNDED);
+                } 
+                // --- REAL STRIPE REFUND ---
+                else if (pid != null && !pid.isEmpty()) {
+                    try {
+                        RefundCreateParams params = RefundCreateParams.builder()
+                                .setPaymentIntent(pid)
+                                .build();
+                        
+                        Refund refund = Refund.create(params);
+                        System.out.println("Stripe Refund Successful: " + refund.getId());
+                        r.setStatus(Reservation.ReservationStatus.REFUNDED);
+                        
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new RuntimeException("Failed to process Stripe refund: " + e.getMessage());
+                    }
+                } 
+                else {
+                    // No Payment ID found? Just mark as Refunded/Cancelled
+                    r.setStatus(Reservation.ReservationStatus.REFUNDED);
+                }
+
+            } else {
+                // Less than 72 hours = No Refund
+                r.setStatus(Reservation.ReservationStatus.CANCELLED);
+            }
+
+            // 3. Free up the Room Dates
             Room room = roomRepository.findById(r.getRoomId()).orElseThrow();
-            
-            // Remove the specific date range from the room's unavailable list
             if (room.getUnavailableDates() != null) {
                 room.getUnavailableDates().removeIf(date -> 
                     date.getStart().equals(r.getCheckIn()) && date.getEnd().equals(r.getCheckOut())

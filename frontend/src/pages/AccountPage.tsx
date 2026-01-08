@@ -43,7 +43,7 @@ export default function AccountPage() {
     };
 
     const filteredReservations = reservations?.filter((res: any) => {
-        const isCanceled = res.status === 'CANCELLED';
+        const isCanceled = res.status === 'CANCELLED' || res.status === 'REFUNDED';
         const isPast = dayjs(res.checkOut).isBefore(dayjs(), 'day'); 
 
         switch (filter) {
@@ -103,7 +103,8 @@ export default function AccountPage() {
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     {filteredReservations?.map((res: any) => {
                         const isStayPast = dayjs(res.checkOut).isBefore(dayjs(), 'day');
-                        const isStayCanceled = res.status === 'CANCELLED';
+                        const isRefunded = res.status === 'REFUNDED';
+                        const isCanceled = res.status === 'CANCELLED';
 
                         return (
                             <Card 
@@ -111,8 +112,8 @@ export default function AccountPage() {
                                 elevation={3} 
                                 sx={{ 
                                     borderRadius: 2, 
-                                    opacity: (isStayPast || isStayCanceled) ? 0.7 : 1, 
-                                    borderLeft: isStayCanceled ? '6px solid #d32f2f' : '6px solid #2e7d32' 
+                                    opacity: (isStayPast || isCanceled || isRefunded) ? 0.7 : 1, 
+                                    borderLeft: (isCanceled || isRefunded) ? '6px solid #d32f2f' : '6px solid #2e7d32' 
                                 }}
                             >
                                 <CardContent>
@@ -133,10 +134,10 @@ export default function AccountPage() {
                                                 </Typography>
                                                 
                                                 <Chip 
-                                                    label={isStayCanceled ? "CANCELED" : isStayPast ? "COMPLETED" : "UPCOMING"} 
-                                                    color={isStayCanceled ? 'error' : isStayPast ? 'default' : 'success'} 
+                                                    label={isRefunded ? "REFUNDED" : isCanceled ? "CANCELED" : isStayPast ? "COMPLETED" : "UPCOMING"} 
+                                                    color={isRefunded ? 'info' : isCanceled ? 'error' : isStayPast ? 'default' : 'success'} 
                                                     size="small" 
-                                                    variant={isStayCanceled || isStayPast ? 'outlined' : 'filled'}
+                                                    variant={isCanceled || isStayPast || isRefunded ? 'outlined' : 'filled'}
                                                 />
                                             </Box>
                                             
@@ -154,7 +155,7 @@ export default function AccountPage() {
                                                 ${res.totalPrice.toFixed(2)}
                                             </Typography>
                                             
-                                            {!isStayCanceled && !isStayPast && (
+                                            {!isCanceled && !isRefunded && !isStayPast && (
                                                 <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                                                     <Button variant="contained" startIcon={<EditIcon />} size="small">
                                                         Edit
