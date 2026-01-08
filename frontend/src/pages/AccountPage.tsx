@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { 
     Container, Typography, Box, Card, CardContent, 
-    Chip, Button, Grid, CircularProgress, Alert, 
-    FormControl, InputLabel, Select, MenuItem, type SelectChangeEvent
+    Chip, Button, CircularProgress, Alert, 
+    FormControl, InputLabel, Select, MenuItem, type SelectChangeEvent,
+    Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle
 } from '@mui/material';
 import { useGetMyReservationsQuery, useCancelReservationMutation } from '../services/reservationApi';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -16,12 +17,24 @@ export default function AccountPage() {
     const { data: reservations, isLoading, isError } = useGetMyReservationsQuery(undefined);
     const [cancelReservation] = useCancelReservationMutation();
 
-    // FILTER STATE: Default to 'ALL'
     const [filter, setFilter] = useState<'ALL' | 'CURRENT' | 'PAST' | 'CANCELED'>('ALL');
+    
+    // Tracks which reservation ID to cancel. Null = Dialog Closed.
+    const [cancelId, setCancelId] = useState<string | null>(null);
 
-    const handleCancel = async (id: string) => {
-        if (window.confirm("Are you sure you want to cancel this reservation? This cannot be undone.")) {
-            await cancelReservation(id);
+    // --- DIALOG HANDLERS ---
+    const handleClickCancel = (id: string) => {
+        setCancelId(id); // Open Dialog
+    };
+
+    const handleCloseDialog = () => {
+        setCancelId(null); // Close Dialog
+    };
+
+    const handleConfirmCancel = async () => {
+        if (cancelId) {
+            await cancelReservation(cancelId);
+            setCancelId(null);
         }
     };
 
@@ -29,21 +42,15 @@ export default function AccountPage() {
         setFilter(event.target.value as any);
     };
 
-    // --- FILTER LOGIC ---
     const filteredReservations = reservations?.filter((res: any) => {
         const isCanceled = res.status === 'CANCELLED';
         const isPast = dayjs(res.checkOut).isBefore(dayjs(), 'day'); 
 
         switch (filter) {
-            case 'CURRENT':
-                return !isCanceled && !isPast;
-            case 'PAST':
-                return !isCanceled && isPast;
-            case 'CANCELED':
-                return isCanceled;
-            case 'ALL':
-            default:
-                return true;
+            case 'CURRENT': return !isCanceled && !isPast;
+            case 'PAST': return !isCanceled && isPast;
+            case 'CANCELED': return isCanceled;
+            case 'ALL': default: return true;
         }
     });
 
@@ -53,7 +60,7 @@ export default function AccountPage() {
     return (
         <Container maxWidth="md" sx={{ mt: 4, mb: 8 }}>
             
-            {/* HEADER & FILTER BAR */}
+            {/* HEADER */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
                 <Box>
                     <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
@@ -66,16 +73,8 @@ export default function AccountPage() {
 
                 <FormControl size="small" sx={{ minWidth: 200 }}>
                     <InputLabel>Filter View</InputLabel>
-                    <Select
-                        value={filter}
-                        label="Filter View"
-                        onChange={handleFilterChange}
-                    >
-                        <MenuItem value="ALL">
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                Show All
-                            </Box>
-                        </MenuItem>
+                    <Select value={filter} label="Filter View" onChange={handleFilterChange}>
+                        <MenuItem value="ALL">Show All</MenuItem>
                         <MenuItem value="CURRENT">
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <EventAvailableIcon fontSize="small" color="primary" /> Current / Upcoming
@@ -95,7 +94,7 @@ export default function AccountPage() {
                 </FormControl>
             </Box>
 
-            {/* LIST */}
+            {/* RESERVATION LIST */}
             {filteredReservations?.length === 0 ? (
                 <Alert severity="info" variant="outlined" sx={{ mt: 2 }}>
                     No {filter.toLowerCase()} reservations found.
@@ -117,10 +116,17 @@ export default function AccountPage() {
                                 }}
                             >
                                 <CardContent>
-                                    <Grid container spacing={2} alignItems="center">
+                                    {/* FLEXBOX LAYOUT (Fixes the "Middle" Issue) */}
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between', // Pushes items to edges
+                                        alignItems: 'center', 
+                                        flexWrap: 'wrap', // Wraps nicely on mobile
+                                        gap: 2 
+                                    }}>
                                         
-                                        {/* Left: Info */}
-                                        <Grid size={{ xs: 12, md: 8 }}>
+                                        {/* LEFT SIDE: ROOM INFO */}
+                                        <Box>
                                             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1 }}>
                                                 <Typography variant="h6" fontWeight="bold">
                                                     {res.room?.roomTypeId?.name || "Room Info Unavailable"}
@@ -140,41 +146,64 @@ export default function AccountPage() {
                                             <Typography variant="body1" sx={{ mt: 1, fontWeight: 'medium' }}>
                                                 {dayjs(res.checkIn).format('MMM D, YYYY')} — {dayjs(res.checkOut).format('MMM D, YYYY')}
                                             </Typography>
-                                        </Grid>
+                                        </Box>
 
-                                        {/* Right: Actions */}
-                                        <Grid size={{ xs: 12, md: 4 }} sx={{ textAlign: 'right' }}>
+                                        {/* RIGHT SIDE: ACTIONS & PRICE */}
+                                        <Box sx={{ textAlign: 'right' }}>
                                             <Typography variant="h6" sx={{ mb: 2 }}>
                                                 ${res.totalPrice.toFixed(2)}
                                             </Typography>
                                             
                                             {!isStayCanceled && !isStayPast && (
-                                                <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
-                                                    {/* CHANGED TO CONTAINED */}
+                                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                                                     <Button variant="contained" startIcon={<EditIcon />} size="small">
                                                         Edit
                                                     </Button>
                                                     
-                                                    {/* CHANGED TO CONTAINED */}
                                                     <Button 
                                                         variant="contained" 
                                                         color="error" 
                                                         startIcon={<DeleteIcon />} 
                                                         size="small"
-                                                        onClick={() => handleCancel(res.id)}
+                                                        onClick={() => handleClickCancel(res.id)}
                                                     >
                                                         Cancel
                                                     </Button>
                                                 </Box>
                                             )}
-                                        </Grid>
-                                    </Grid>
+                                        </Box>
+
+                                    </Box>
                                 </CardContent>
                             </Card>
                         );
                     })}
                 </Box>
             )}
+
+            {/* CUSTOM CONFIRMATION DIALOG */}
+            <Dialog
+                open={!!cancelId} 
+                onClose={handleCloseDialog}
+            >
+                <DialogTitle sx={{ color: 'error.main', fontWeight: 'bold' }}>
+                    Cancel Reservation?
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to cancel this booking? This action cannot be undone and your room will be released immediately.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={handleCloseDialog} color="inherit" variant="outlined">
+                        No, Keep It
+                    </Button>
+                    <Button onClick={handleConfirmCancel} color="error" variant="contained" autoFocus>
+                        Yes, Cancel It
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
         </Container>
     );
 }
