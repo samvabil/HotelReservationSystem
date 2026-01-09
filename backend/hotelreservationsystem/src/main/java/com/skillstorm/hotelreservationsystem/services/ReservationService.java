@@ -194,65 +194,86 @@ public class ReservationService {
     public Reservation updateReservation(String reservationId, ReservationRequest request) {
         Reservation r = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
-        
-        Room room = roomRepository.findById(r.getRoomId()).orElseThrow();
 
-        // A. Handle Date Changes
-        if (!r.getCheckIn().equals(request.getCheckIn()) || !r.getCheckOut().equals(request.getCheckOut())) {
+        // 1. Check what actually changed
+        boolean datesChanged = !r.getCheckIn().equals(request.getCheckIn()) || !r.getCheckOut().equals(request.getCheckOut());
+        boolean roomChanged = !r.getRoomId().equals(request.getRoomId()); // <--- CRITICAL: Detect Room Change
+
+        if (datesChanged || roomChanged) {
             
-            // 1. Remove OLD dates temporarily
-            room.getUnavailableDates().removeIf(date -> 
-                date.getStart().equals(r.getCheckIn()) && date.getEnd().equals(r.getCheckOut())
-            );
+            // A. RELEASE THE OLD ROOM (Clear its calendar)
+            Room oldRoom = roomRepository.findById(r.getRoomId()).orElseThrow();
+            if (oldRoom.getUnavailableDates() != null) {
+                // Remove the specific date range for this reservation
+                oldRoom.getUnavailableDates().removeIf(date -> 
+                    date.getStart().equals(r.getCheckIn()) && date.getEnd().equals(r.getCheckOut())
+                );
+            }
+            roomRepository.save(oldRoom); // Save the "freed up" old room
 
-            // 2. Check availability
-            boolean isAvailable = roomRepository.findAvailableRooms(request.getCheckIn(), request.getCheckOut())
-                    .stream().anyMatch(availableRoom -> availableRoom.getId().equals(room.getId()));
+            // B. PREPARE THE NEW ROOM
+            // If roomChanged is true, fetch the NEW ID. If not, re-fetch the OLD ID (which we just cleared).
+            Room targetRoom = roomChanged ? 
+                    roomRepository.findById(request.getRoomId()).orElseThrow(() -> new RuntimeException("New Room not found")) 
+                    : oldRoom;
 
-            if (!isAvailable) {
-                // Revert
-                room.getUnavailableDates().add(new Room.UnavailableDate(r.getCheckIn(), r.getCheckOut()));
-                roomRepository.save(room);
-                throw new RuntimeException("New dates are not available.");
+            // C. CHECK AVAILABILITY ON TARGET ROOM
+            // We check if the target room has ANY overlap with the requested dates
+            boolean isAvailable = true;
+            if (targetRoom.getUnavailableDates() != null) {
+                for (Room.UnavailableDate date : targetRoom.getUnavailableDates()) {
+                    // Standard Overlap Logic: (StartA < EndB) and (EndA > StartB)
+                    if (request.getCheckIn().isBefore(date.getEnd()) && request.getCheckOut().isAfter(date.getStart())) {
+                        isAvailable = false;
+                        break;
+                    }
+                }
             }
 
-            // 3. Set new dates
+            if (!isAvailable) {
+                // Throwing this RuntimeException triggers @Transactional rollback 
+                // (The old room dates will automatically be restored by the DB rollback)
+                throw new RuntimeException("The selected room is not available for these dates.");
+            }
+
+            // D. BOOK THE TARGET ROOM
+            if (targetRoom.getUnavailableDates() == null) targetRoom.setUnavailableDates(new ArrayList<>());
+            targetRoom.getUnavailableDates().add(new Room.UnavailableDate(request.getCheckIn(), request.getCheckOut()));
+            roomRepository.save(targetRoom);
+
+            // E. UPDATE RESERVATION DETAILS
+            r.setRoomId(targetRoom.getId()); // <--- CRITICAL: Update the ID
             r.setCheckIn(request.getCheckIn());
             r.setCheckOut(request.getCheckOut());
-            
-            // 4. Update Price
-            RoomType type = roomTypeRepository.findById(room.getRoomTypeId()).orElseThrow();
+
+            // F. RECALCULATE PRICE
+            // We must fetch the type of the TARGET room to get the correct price
+            RoomType type = roomTypeRepository.findById(targetRoom.getRoomTypeId()).orElseThrow();
             long nights = java.time.temporal.ChronoUnit.DAYS.between(request.getCheckIn(), request.getCheckOut());
             if (nights < 1) nights = 1;
+            
             r.setTotalPrice(type.getPricePerNight() * nights);
-
-            // 5. Block NEW dates
-            room.getUnavailableDates().add(new Room.UnavailableDate(request.getCheckIn(), request.getCheckOut()));
-            roomRepository.save(room);
         }
 
-        // B. Update Guest Count
+        // 2. Update Guest Count (Always)
         r.setGuestCount(request.getGuestCount());
 
         Reservation savedReservation = reservationRepository.save(r);
 
-        // --- EMAIL NOTIFICATION LOGIC ---
+        // 3. Send Email
         try {
-            // 1. Fetch User (Required for Email Address)
             User user = userRepository.findById(r.getUserId()).orElseThrow();
             r.setUser(user);
-
-            // 2. Ensure Room details are fully loaded (Required for Room Name)
-            // If dates didn't change, we might not have fetched 'type' yet, so we verify here
-            if (room.getRoomType() == null) {
-                RoomType type = roomTypeRepository.findById(room.getRoomTypeId()).orElse(null);
-                room.setRoomType(type);
-            }
-            r.setRoom(room);
-
-            // 3. Send Email
-            emailService.sendUpdateConfirmation(user.getEmail(), r);
             
+            // Hydrate room details for the email
+            Room currentRoom = roomRepository.findById(r.getRoomId()).orElseThrow();
+            if (currentRoom.getRoomType() == null) {
+                RoomType type = roomTypeRepository.findById(currentRoom.getRoomTypeId()).orElse(null);
+                currentRoom.setRoomType(type);
+            }
+            r.setRoom(currentRoom);
+
+            emailService.sendUpdateConfirmation(user.getEmail(), r);
         } catch (Exception e) {
             System.err.println("Failed to send update email: " + e.getMessage());
         }
