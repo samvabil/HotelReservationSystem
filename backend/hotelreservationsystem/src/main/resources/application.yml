@@ -22,6 +22,19 @@ spring:
                         # This must match what you put in Google Cloud Console
                         redirect-uri: "http://localhost:8080/login/oauth2/code/google"
                         client-name: Google
+    mail:
+        host: smtp.gmail.com
+        port: 587
+        username: anthonyhugginsdev@gmail.com
+        # Wrap the password in quotes because it contains spaces
+        password: ${GMAIL_APP_PASSWORD} 
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: true
 
 stripe:
     key: ${STRIPE_SECRET}
+

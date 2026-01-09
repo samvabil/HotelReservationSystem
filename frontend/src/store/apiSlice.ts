@@ -30,6 +30,6 @@ export const apiSlice = createApi({
     }, 
   }),
   // Tag Types are used for caching and invalidation
-  tagTypes: ['User', 'Room', 'RoomType', 'Booking'], 
+  tagTypes: ['User', 'Room', 'Booking', 'Reservation'], 
   endpoints: (builder) => ({}), // We inject endpoints in separate files
 });

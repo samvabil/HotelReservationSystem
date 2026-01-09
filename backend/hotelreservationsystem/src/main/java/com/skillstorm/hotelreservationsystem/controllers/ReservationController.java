@@ -3,6 +3,9 @@ package com.skillstorm.hotelreservationsystem.controllers;
 import com.skillstorm.hotelreservationsystem.dto.ReservationRequest;
 import com.skillstorm.hotelreservationsystem.models.Reservation;
 import com.skillstorm.hotelreservationsystem.services.ReservationService;
+
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,5 +29,21 @@ public class ReservationController {
         
         Reservation reservation = reservationService.createReservation(request, email);
         return new ResponseEntity<>(reservation, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/my-reservations")
+    public List<Reservation> getMyReservations(@AuthenticationPrincipal OAuth2User principal) {
+        return reservationService.getReservationsByUser(principal.getAttribute("email"));
+    }
+
+    @PutMapping("/{id}")
+    public Reservation updateReservation(@PathVariable String id, @RequestBody ReservationRequest request) {
+        return reservationService.updateReservation(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> cancelReservation(@PathVariable String id) {
+        reservationService.cancelReservation(id);
+        return ResponseEntity.noContent().build();
     }
 }

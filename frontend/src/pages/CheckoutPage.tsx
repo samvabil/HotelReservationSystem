@@ -1,47 +1,45 @@
-import { useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom'; // Added useNavigate
 import { useSelector, useDispatch } from 'react-redux';
-import { Container, Grid, Typography, Card, CardContent, Box, Divider, CircularProgress, Alert } from '@mui/material';
+import { 
+    Container, Grid, Typography, Card, CardContent, Box, Divider, 
+    CircularProgress, Alert, Dialog, DialogContent, DialogActions, Button 
+} from '@mui/material';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs, { Dayjs } from 'dayjs'; 
 import isBetween from 'dayjs/plugin/isBetween';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // Added Icon
 
 import { type RootState } from '../store/store';
 import { setDatesAndGuests } from '../store/bookingSlice'; 
 import { useGetRoomByIdQuery } from '../services/roomApi'; 
-// 1. Import the Payment Mutation Hook
 import { useCreatePaymentIntentMutation } from '../services/paymentApi';
 import PaymentForm from '../components/PaymentForm';
 
-// Enable the "isBetween" plugin for easier date range checks
 dayjs.extend(isBetween);
 
-// Stripe public key 
 const stripePromise = loadStripe('pk_test_51Smfl3AXOOCAN7uB0saULNPwwO2HqxyRi0wAWeYqoeoQ1Tsyn1cLAXJBhCSPTlqRkTFgbeqyp3Us64NllGtYmhwT00Bo0ZaLY8');
 
 export default function CheckoutPage() {
   const { roomId } = useParams(); 
+  const navigate = useNavigate(); // Init Hook
   const dispatch = useDispatch();
   
-  const { checkInDate, checkOutDate, guestCount } = useSelector((state: RootState) => state.booking);
-  
-  const { data: room, isLoading, isError } = useGetRoomByIdQuery(roomId || '', { skip: !roomId });
+  // State for Success Modal
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // 2. Use RTK Query Mutation instead of raw fetch
-  // createPaymentIntent = function to trigger the call
-  // data = the response from backend (contains clientSecret)
+  const { checkInDate, checkOutDate, guestCount } = useSelector((state: RootState) => state.booking);
+  const { data: room, isLoading, isError } = useGetRoomByIdQuery(roomId || '', { skip: !roomId });
   const [createPaymentIntent, { data: paymentData, isLoading: isPaymentLoading }] = useCreatePaymentIntentMutation();
 
   const clientSecret = paymentData?.clientSecret;
   
-  // Convert Redux strings to Dayjs objects for the Pickers
   const checkIn = useMemo(() => checkInDate ? dayjs(checkInDate) : dayjs(), [checkInDate]);
   const checkOut = useMemo(() => checkOutDate ? dayjs(checkOutDate) : dayjs().add(1, 'day'), [checkOutDate]);
 
-  // Calculations
   const nights = Math.max(1, checkOut.diff(checkIn, 'day'));
   const pricePerNight = room?.roomTypeId?.pricePerNight || 0;
   const subtotal = pricePerNight * nights;
@@ -49,34 +47,21 @@ export default function CheckoutPage() {
   const total = subtotal + taxes;
 
   useEffect(() => {
-    // If Redux has no dates (like after a refresh), set defaults immediately
     if (!checkInDate || !checkOutDate) {
         const defaultCheckIn = dayjs().format('YYYY-MM-DD');
         const defaultCheckOut = dayjs().add(1, 'day').format('YYYY-MM-DD');
-        
-        dispatch(setDatesAndGuests({
-            checkIn: defaultCheckIn,
-            checkOut: defaultCheckOut,
-            guests: guestCount || 2 
-        }));
+        dispatch(setDatesAndGuests({ checkIn: defaultCheckIn, checkOut: defaultCheckOut, guests: guestCount || 2 }));
     }
   }, [checkInDate, checkOutDate, guestCount, dispatch]);
 
-  // 3. Trigger Payment Intent (Re-runs automatically when total changes)
   useEffect(() => {
     if (total > 0 && room) {
-        createPaymentIntent({ 
-            amount: Math.round(total * 100), 
-            currency: 'usd' 
-        });
+        createPaymentIntent({ amount: Math.round(total * 100), currency: 'usd' });
     }
   }, [total, room, createPaymentIntent]);
 
-  // Handle Date Changes (Dispatches immediately)
   const handleDateChange = (type: 'checkIn' | 'checkOut', newValue: Dayjs | null) => {
     if (!newValue) return;
-
-    // Dispatching updates Redux -> Updates 'total' -> Updates Stripe Intent
     dispatch(setDatesAndGuests({
         checkIn: type === 'checkIn' ? newValue.format('YYYY-MM-DD') : checkIn.format('YYYY-MM-DD'),
         checkOut: type === 'checkOut' ? newValue.format('YYYY-MM-DD') : checkOut.format('YYYY-MM-DD'),
@@ -84,20 +69,17 @@ export default function CheckoutPage() {
     }));
   };
 
-  // Function to Disable Unavailable Dates
   const shouldDisableDate = (date: Dayjs) => {
-    // Always disable past dates
     if (date.isBefore(dayjs(), 'day')) return true;
-
-    // Check against room's unavailable ranges
     if (room?.unavailableDates) {
-        return room.unavailableDates.some(range => {
-            const start = dayjs(range.start);
-            const end = dayjs(range.end);
-            return date.isBetween(start, end, 'day', '[]'); 
-        });
+        return room.unavailableDates.some(range => date.isBetween(dayjs(range.start), dayjs(range.end), 'day', '[]')); 
     }
     return false;
+  };
+
+  // --- HANDLER PASSED TO PAYMENT FORM ---
+  const handlePaymentSuccess = () => {
+    setShowSuccessModal(true);
   };
 
   if (isLoading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
@@ -111,76 +93,33 @@ export default function CheckoutPage() {
         </Typography>
 
         <Grid container spacing={4}>
-            
             {/* LEFT COLUMN: ORDER SUMMARY */}
             <Grid size={{ xs: 12, md: 5 }}>
-                <Card 
-                    elevation={4} 
-                    sx={{ 
-                    bgcolor: 'background.paper', 
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: 'divider'
-                    }}
-                >
+                <Card elevation={4} sx={{ bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                     <CardContent sx={{ p: 3 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 2 }}>
-                            Order Summary
-                        </Typography>
-                        
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 2 }}>Order Summary</Typography>
                         <Box sx={{ mb: 3 }}>
-                            <Typography variant="h5" fontWeight="bold">
-                                {room?.roomTypeId?.name}
-                            </Typography>
-                            <Typography variant="body1" color="text.secondary">
-                                Room {room?.roomNumber}
-                            </Typography>
+                            <Typography variant="h5" fontWeight="bold">{room?.roomTypeId?.name}</Typography>
+                            <Typography variant="body1" color="text.secondary">Room {room?.roomNumber}</Typography>
                         </Box>
-
                         <Divider sx={{ mb: 3 }} />
-
-                        {/* ALWAYS VISIBLE DATE PICKERS */}
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
                             <DatePicker 
-                                label="Check-in" 
-                                value={checkIn} 
-                                onChange={(newValue) => handleDateChange('checkIn', newValue)}
-                                shouldDisableDate={shouldDisableDate}
-                                slotProps={{ textField: { fullWidth: true } }}
+                                label="Check-in" value={checkIn} onChange={(v) => handleDateChange('checkIn', v)} shouldDisableDate={shouldDisableDate} slotProps={{ textField: { fullWidth: true } }}
                             />
                             <DatePicker 
-                                label="Check-out" 
-                                value={checkOut} 
-                                onChange={(newValue) => handleDateChange('checkOut', newValue)}
-                                shouldDisableDate={shouldDisableDate}
-                                minDate={checkIn.add(1, 'day')}
-                                slotProps={{ textField: { fullWidth: true } }}
+                                label="Check-out" value={checkOut} onChange={(v) => handleDateChange('checkOut', v)} shouldDisableDate={shouldDisableDate} minDate={checkIn.add(1, 'day')} slotProps={{ textField: { fullWidth: true } }}
                             />
                         </Box>
-
                         <Divider sx={{ my: 2 }} />
-
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Typography color="text.secondary">
-                                ${pricePerNight} x {nights} nights
-                            </Typography>
+                            <Typography color="text.secondary">${pricePerNight} x {nights} nights</Typography>
                             <Typography fontWeight="medium">${subtotal.toFixed(2)}</Typography>
                         </Box>
-
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                            <Typography color="text.secondary">Taxes & Fees (8%)</Typography>
-                            <Typography fontWeight="medium">${taxes.toFixed(2)}</Typography>
-                        </Box>
-                        
-                        <Divider sx={{ my: 2, borderColor: 'primary.main', borderWidth: 1 }} />
-
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Typography variant="h6">Total</Typography>
-                            <Typography variant="h4" fontWeight="bold" color="secondary.main">
-                                ${total.toFixed(2)}
-                            </Typography>
+                            <Typography variant="h4" fontWeight="bold" color="secondary.main">${total.toFixed(2)}</Typography>
                         </Box>
-
                     </CardContent>
                 </Card>
             </Grid>
@@ -194,21 +133,56 @@ export default function CheckoutPage() {
                         
                         {clientSecret ? (
                             <Elements stripe={stripePromise} options={{ clientSecret }}>
-                                <PaymentForm totalCost={total} roomId={roomId || ''}/>
+                                {/* Pass the Success Handler Here */}
+                                <PaymentForm 
+                                    totalCost={total} 
+                                    roomId={roomId || ''} 
+                                    onSuccess={handlePaymentSuccess} 
+                                />
                             </Elements>
                         ) : (
                             <Box sx={{ textAlign: 'center', py: 4 }}>
                                 <CircularProgress />
-                                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                                    {isPaymentLoading ? "Updating price..." : "Securing connection..."}
-                                </Typography>
+                                <Typography variant="caption" display="block" sx={{ mt: 1 }}>{isPaymentLoading ? "Updating price..." : "Securing connection..."}</Typography>
                             </Box>
                         )}
                     </CardContent>
                 </Card>
             </Grid>
-
         </Grid>
+
+        {/* --- SUCCESS MODAL --- */}
+        <Dialog 
+            open={showSuccessModal} 
+            maxWidth="sm" 
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 3, textAlign: 'center', p: 2 } }}
+        >
+            <DialogContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                <CheckCircleIcon color="success" sx={{ fontSize: 80 }} />
+                <Typography variant="h4" fontWeight="bold">Payment Successful!</Typography>
+                <Typography variant="body1" color="text.secondary">
+                    Your reservation has been confirmed. You will receive an email shortly with your booking details.
+                </Typography>
+            </DialogContent>
+            <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 4 }}>
+                <Button 
+                    variant="contained" 
+                    size="large" 
+                    onClick={() => navigate('/')}
+                >
+                    Back to Home
+                </Button>
+                <Button 
+                    variant="contained" 
+                    size="large" 
+                    onClick={() => navigate('/account')}
+                >
+                    Go to My Account
+                </Button>
+            </DialogActions>
+        </Dialog>
+
         </Container>
     </LocalizationProvider>
   );
