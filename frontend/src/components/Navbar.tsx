@@ -15,8 +15,9 @@ export default function Navbar() {
   const location = useLocation();
   const dispatch = useDispatch();
   
-  // Get auth state
+  // Get auth state for both user and employee
   const { user, isAuthenticated } = useSelector((state: RootState) => state.userAuth);
+  const { isEmployeeAuthenticated } = useSelector((state: RootState) => state.employeeAuth);
   const [logoutApiCall] = useLogoutUserMutation();
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
@@ -83,7 +84,13 @@ export default function Navbar() {
             </Button>
 
             <Button
-                onClick={() => navigate("/employee/login")}
+                onClick={() => {
+                  if (isEmployeeAuthenticated) {
+                    navigate("/employee/dashboard");
+                  } else {
+                    navigate("/employee/login");
+                  }
+                }}
                 sx={{
                   my: 2,
                   color: "text.secondary",
