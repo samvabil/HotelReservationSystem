@@ -38,3 +38,7 @@ spring:
 stripe:
     key: ${STRIPE_SECRET}
 
+aws:
+    region: us-east-1
+    s3:
+        bucket: 20251117-ey-project2-group4-assets

@@ -11,11 +11,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.skillstorm.hotelreservationsystem.dto.RoomTypeUpsertRequest;
 import com.skillstorm.hotelreservationsystem.models.RoomType;
 import com.skillstorm.hotelreservationsystem.services.RoomTypeAdminService;
+import com.skillstorm.hotelreservationsystem.services.S3StorageService;
 
 import jakarta.validation.Valid;
 
@@ -24,9 +27,11 @@ import jakarta.validation.Valid;
 public class EmployeeRoomTypeAdminController {
 
     private final RoomTypeAdminService roomTypeAdminService;
+    private final S3StorageService s3StorageService;
 
-    public EmployeeRoomTypeAdminController(RoomTypeAdminService roomTypeAdminService) {
+    public EmployeeRoomTypeAdminController(RoomTypeAdminService roomTypeAdminService, S3StorageService s3StorageService) {
         this.roomTypeAdminService = roomTypeAdminService;
+        this.s3StorageService = s3StorageService;
     }
 
     @GetMapping
@@ -48,6 +53,11 @@ public class EmployeeRoomTypeAdminController {
     @PutMapping("/{id}")
     public RoomType update(@PathVariable String id, @Valid @RequestBody RoomTypeUpsertRequest req) {
         return roomTypeAdminService.update(id, req);
+    }
+
+    @PostMapping("/{id}/images")
+    public RoomType uploadRoomTypeImage(@PathVariable String id, @RequestPart("file") MultipartFile file) {
+        return roomTypeAdminService.addImage(id, s3StorageService.uploadRoomTypeImage(id, file));
     }
 
     @DeleteMapping("/{id}")
