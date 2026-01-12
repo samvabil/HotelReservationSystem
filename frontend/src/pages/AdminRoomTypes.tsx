@@ -30,6 +30,7 @@ import {
   useDeleteAdminRoomTypeMutation,
   useGetAdminRoomTypesQuery,
   useUpdateAdminRoomTypeMutation,
+  useUploadAdminRoomTypeImageMutation,
   type AdminRoomType,
   type RoomTypeUpsertBody,
 } from "../services/employeeRoomTypesAdminApi";
@@ -109,25 +110,28 @@ export default function AdminRoomTypes() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AdminRoomType | null>(null);
   const [form, setForm] = useState<RoomTypeUpsertBody>(() => emptyForm());
-  const [imageUrlDraft, setImageUrlDraft] = useState("");
   const [consoleDraft, setConsoleDraft] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<AdminRoomType | null>(null);
   const [formError, setFormError] = useState<string>("");
+  const [uploadRoomTypeImage, { isLoading: uploading }] = useUploadAdminRoomTypeImageMutation();
+  const [pickedFile, setPickedFile] = useState<File | null>(null);
+
 
   const title = useMemo(() => (editing ? "Edit Room Type" : "Create Room Type"), [editing]);
 
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm());
-    setImageUrlDraft("");
     setConsoleDraft("");
     setFormError("");
     setOpen(true);
+    setPickedFile(null);
   };
 
   const openEdit = (rt: AdminRoomType) => {
     setEditing(rt);
+    setPickedFile(null);
     setForm({
       name: rt.name,
       pricePerNight: rt.pricePerNight,
@@ -143,7 +147,6 @@ export default function AdminRoomTypes() {
       consoles: rt.consoles ?? [],
       images: rt.images ?? [],
     });
-    setImageUrlDraft("");
     setConsoleDraft("");
     setFormError("");
     setOpen(true);
@@ -193,18 +196,33 @@ export default function AdminRoomTypes() {
     name,
     typeBed,
     consoles: (form.consoles ?? []).map((c) => c.trim()).filter(Boolean),
-    images: (form.images ?? []).map((u) => u.trim()).filter(Boolean),
+    images: form.images ?? [],
   };
 
   try {
+    let saved: AdminRoomType;
+
     if (editing) {
-      await updateRoomType({ id: editing.id, body }).unwrap();
+      saved = await updateRoomType({ id: editing.id, body }).unwrap();
     } else {
-      await createRoomType(body).unwrap();
+      saved = await createRoomType(body).unwrap();
     }
+
+    if (pickedFile) {
+      try {
+        await uploadRoomTypeImage({ roomTypeId: saved.id, file: pickedFile }).unwrap();
+      } catch (e: any) {
+        const msg =
+          e?.data?.message ||
+          e?.data?.error ||
+          "Image upload failed. Room type was saved though.";
+        setFormError(msg);
+        return; 
+      }
+    }
+
     setOpen(false);
   } catch (e: any) {
-    // RTK Query unwrap throws an object that often includes data.message
     const msg =
       e?.data?.message ||
       e?.data?.error ||
@@ -233,17 +251,6 @@ export default function AdminRoomTypes() {
    setConfirmOpen(false);
    setPendingDelete(null);
  };
-
-  const addImageUrl = () => {
-    const v = imageUrlDraft.trim();
-    if (!v) return;
-    setForm((p) => ({ ...p, images: [...(p.images ?? []), v] }));
-    setImageUrlDraft("");
-  };
-
-  const removeImageUrl = (idx: number) => {
-    setForm((p) => ({ ...p, images: (p.images ?? []).filter((_, i) => i !== idx) }));
-  };
 
   const addConsole = () => {
     const v = consoleDraft.trim();
@@ -496,58 +503,41 @@ export default function AdminRoomTypes() {
 
               <Divider />
 
-              <Typography variant="subtitle1" fontWeight={700}>
-                Image URLs (S3)
-              </Typography>
+                <Typography variant="subtitle1" fontWeight={700}>
+                  Upload Image
+                </Typography>
 
-              <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems="stretch">
-                <TextField
-                  label="Add Image URL"
-                  value={imageUrlDraft}
-                  onChange={(e) => setImageUrlDraft(e.target.value)}
-                  fullWidth
-                />
-                <Button variant="outlined" onClick={addImageUrl}>
-                  Add
-                </Button>
-              </Stack>
+                <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems="center">
+                  <Button variant="outlined" component="label">
+                    Choose Image
+                    <input
+                      hidden
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] ?? null;
+                        setPickedFile(f);
+                      }}
+                    />
+                  </Button>
 
-              <Stack spacing={1}>
-                {(form.images ?? []).map((url, idx) => (
-                  <Box
-                    key={`${url}-${idx}`}
-                    sx={{
-                      display: "flex",
-                      gap: 2,
-                      alignItems: "center",
-                      border: "1px solid #333",
-                      borderRadius: 1,
-                      p: 1,
-                    }}
-                  >
-                    <Typography variant="body2" sx={{ wordBreak: "break-all", flexGrow: 1 }}>
-                      {url}
-                    </Typography>
-                    <Button size="small" color="error" variant="outlined" onClick={() => removeImageUrl(idx)}>
-                      Remove
-                    </Button>
-                  </Box>
-                ))}
-
-                {(form.images ?? []).length === 0 && (
-                  <Typography variant="body2" color="text.secondary">
-                    No images added yet.
+                  <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-all" }}>
+                    {pickedFile ? pickedFile.name : "No file selected"}
                   </Typography>
-                )}
-              </Stack>
-            </Stack>
+                </Stack>
+
+                <Typography variant="body2" color="text.secondary">
+                  Image is uploaded after you click Save.
+                </Typography>
+
+            </Stack>              
           </DialogContent>
 
           <DialogActions>
             <Button onClick={closeDialog} variant="outlined">
               Cancel
             </Button>
-            <Button onClick={handleSave} variant="contained" disabled={creating || updating}>
+            <Button onClick={handleSave} variant="contained" disabled={creating || updating || uploading}>
               Save
             </Button>
           </DialogActions>

@@ -70,6 +70,26 @@ export const employeeRoomTypesAdminApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: [{ type: "RoomType", id: "LIST" }],
     }),
+
+    uploadAdminRoomTypeImage: builder.mutation<
+      { url?: string } | any,
+      { roomTypeId: string; file: File }
+    >({
+      query: ({ roomTypeId, file }) => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        return {
+          url: `/api/employees/admin/room-types/${roomTypeId}/images`,
+          method: "POST",
+          body: formData,
+        };
+      },
+      invalidatesTags: (_res, _err, arg) => [
+        { type: "RoomType", id: "LIST" },
+        { type: "RoomType", id: arg.roomTypeId },
+      ],
+    }),
   }),
 });
 
@@ -78,4 +98,5 @@ export const {
   useCreateAdminRoomTypeMutation,
   useUpdateAdminRoomTypeMutation,
   useDeleteAdminRoomTypeMutation,
+  useUploadAdminRoomTypeImageMutation,
 } = employeeRoomTypesAdminApi;
