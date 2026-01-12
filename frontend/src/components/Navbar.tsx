@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, Menu, MenuItem, Avatar, Tooltip } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, Menu, MenuItem, Avatar, Tooltip, Divider } from '@mui/material';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import { Link, useNavigate, useLocation } from 'react-router-dom'; 
 import { useSelector, useDispatch } from 'react-redux';
 import { type RootState } from '../store/store';
+
+// --- USER AUTH IMPORTS ---
 import { logout } from '../store/userAuthSlice';
 import { useLogoutUserMutation } from '../services/userAuthApi'; 
+
+// --- EMPLOYEE AUTH IMPORTS ---
+import { clearEmployee } from '../store/employeeAuthSlice';
+import { useLogoutEmployeeMutation } from '../services/employeeAuthApi';
 
 // MAKE SURE THIS PORT MATCHES YOUR SPRING BOOT SERVER
 const SPRING_BOOT_URL = "http://localhost:8080";
@@ -15,39 +21,81 @@ export default function Navbar() {
   const location = useLocation();
   const dispatch = useDispatch();
   
-  // Get auth state for both user and employee
+  // 1. Get Auth State
   const { user, isAuthenticated } = useSelector((state: RootState) => state.userAuth);
-  const { isEmployeeAuthenticated } = useSelector((state: RootState) => state.employeeAuth);
-  const [logoutApiCall] = useLogoutUserMutation();
+  const { isEmployeeAuthenticated, employee } = useSelector((state: RootState) => state.employeeAuth);
+  
+  // 2. Logout Mutations
+  const [logoutUserApi] = useLogoutUserMutation();
+  const [logoutEmployeeApi] = useLogoutEmployeeMutation();
+
+  // 3. Menu States
+  const [anchorElSignIn, setAnchorElSignIn] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
 
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget);
+  const isSignInOpen = Boolean(anchorElSignIn);
+  const isUserMenuOpen = Boolean(anchorElUser);
+
+  // --- HANDLERS: SIGN IN MENU ---
+  const handleOpenSignIn = (event: React.MouseEvent<HTMLElement>) => setAnchorElSignIn(event.currentTarget);
+  const handleCloseSignIn = () => setAnchorElSignIn(null);
+
+  const handleEmployeeLoginClick = () => {
+    handleCloseSignIn();
+    navigate('/employee/login');
   };
 
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
+  const handleLogin = () => {
+    handleCloseSignIn();
+    const fullPath = location.pathname + location.search;
+    sessionStorage.setItem('redirectPath', fullPath);
+    window.location.href = `${SPRING_BOOT_URL}/oauth2/authorization/google`;
   };
 
+  // --- HANDLERS: PROFILE MENU ---
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorElUser(event.currentTarget);
+  const handleCloseUserMenu = () => setAnchorElUser(null);
+
+  // --- HANDLER: LOGOUT (Dynamic) ---
   const handleLogout = async () => {
     handleCloseUserMenu();
-    try {
-      await logoutApiCall().unwrap();
-      dispatch(logout());
-      window.location.reload();
-    } catch (error) {
-      console.error("Logout failed", error);
+
+    // A. EMPLOYEE LOGOUT
+    if (isEmployeeAuthenticated) {
+      try {
+        await logoutEmployeeApi().unwrap();
+      } catch (err) {
+        console.error("Employee logout failed", err);
+      } finally {
+        dispatch(clearEmployee());
+        navigate('/employee/login');
+      }
+    } 
+    // B. USER LOGOUT
+    else if (isAuthenticated) {
+      try {
+        await logoutUserApi().unwrap();
+      } catch (err) {
+        console.error("User logout failed", err);
+      } finally {
+        dispatch(logout());
+        // Reloading ensures all states/caches are clean for the next user
+        window.location.reload(); 
+      }
     }
   };
 
-  // --- THIS IS THE FIX ---
-  const handleLogin = () => {
-    // 1. Save current location so we can return here later
-    const fullPath = location.pathname + location.search;
-    sessionStorage.setItem('redirectPath', fullPath);
+  // Helper for Display Logic
+  const getProfileSrc = () => {
+    if (isEmployeeAuthenticated) return "https://via.placeholder.com/150?text=Staff";
+    if (isAuthenticated && user) return user.auth?.avatarUrl;
+    return undefined;
+  };
 
-    // 2. FORCE BROWSER REDIRECT (Do not use navigate)
-    window.location.href = `${SPRING_BOOT_URL}/oauth2/authorization/google`;
+  const getProfileName = () => {
+      if (isEmployeeAuthenticated) return `Staff: ${employee?.employeeId || 'Employee'}`;
+      if (isAuthenticated && user) return user.firstName;
+      return "User";
   };
 
   return (
@@ -76,46 +124,48 @@ export default function Navbar() {
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <Button 
-                onClick={() => navigate('/book')}
-                sx={{ my: 2, color: 'white', display: 'block' }}
-            >
-              Book A Room
-            </Button>
+            
+            {/* 1. USER LINKS */}
+            {isAuthenticated && !isEmployeeAuthenticated && (
+                <>
+                    <Button onClick={() => navigate('/book')} sx={{ my: 2, color: 'white', display: 'block' }}>
+                        Book A Room
+                    </Button>
+                    <Button onClick={() => navigate('/account')} sx={{ my: 2, color: 'white', display: 'block' }}>
+                        My Reservations
+                    </Button>
+                </>
+            )}
 
-            <Button 
-                onClick={() => navigate('/account')}
-                sx={{ my: 2, color: 'white', display: 'block' }}
-            >
-              My Account
-            </Button>
+            {/* 2. EMPLOYEE LINKS */}
+            {isEmployeeAuthenticated && (
+                <>
+                    <Button onClick={() => navigate('/employee/admin/rooms')} sx={{ my: 2, color: 'white', display: 'block' }}>
+                        Manage Rooms
+                    </Button>
+                    <Button onClick={() => navigate('/employee/admin/room-types')} sx={{ my: 2, color: 'white', display: 'block' }}>
+                        Manage Room Types
+                    </Button>
+                    <Button onClick={() => navigate('/employee/dashboard')} sx={{ my: 2, color: 'white', display: 'block' }}>
+                        Employee Dashboard
+                    </Button>
+                </>
+            )}
 
-            <Button
-                onClick={() => {
-                  if (isEmployeeAuthenticated) {
-                    navigate("/employee/dashboard");
-                  } else {
-                    navigate("/employee/login");
-                  }
-                }}
-                sx={{
-                  my: 2,
-                  color: "text.secondary",
-                  fontSize: "0.85rem",
-                  textTransform: "none",
-                }}
-              >
-                Employee Portal
-              </Button>
-
-            {isAuthenticated && user ? (
-              // LOGGED IN VIEW
+            {/* 3. RIGHT SIDE: PROFILE OR SIGN IN */}
+            {(isAuthenticated || isEmployeeAuthenticated) ? (
+              // LOGGED IN VIEW: Clickable Profile Menu
               <Box sx={{ flexGrow: 0 }}>
                 <Tooltip title="Open settings">
-                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                    <Avatar alt={user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1)} src={user.auth?.avatarUrl} imgProps={{ referrerPolicy: "no-referrer" }} />
+                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}> 
+                    <Avatar 
+                        alt={getProfileName()} 
+                        src={getProfileSrc()} 
+                        imgProps={{ referrerPolicy: "no-referrer" }} 
+                    />
                   </IconButton>
                 </Tooltip>
+                
                 <Menu
                   sx={{ mt: '45px' }}
                   id="menu-appbar"
@@ -123,30 +173,50 @@ export default function Navbar() {
                   anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                   keepMounted
                   transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-                  open={Boolean(anchorElUser)}
+                  open={isUserMenuOpen}
                   onClose={handleCloseUserMenu}
                 >
-                  <MenuItem disabled>
-                    <Typography textAlign="center">Hi, {user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1)}!</Typography>
-                  </MenuItem>
-                  <MenuItem onClick={() => { handleCloseUserMenu(); navigate('/account'); }}>
-                    <Typography textAlign="center">My Account</Typography>
-                  </MenuItem>
+
                   <MenuItem onClick={handleLogout}>
                     <Typography textAlign="center" color="error">Logout</Typography>
                   </MenuItem>
                 </Menu>
               </Box>
             ) : (
-              // LOGGED OUT VIEW
-              <Button 
-                // CRITICAL FIX: call handleLogin, NOT navigate('/login')
-                onClick={handleLogin}
-                variant="contained" 
-                color="primary"
-              >
-                Sign In
-              </Button>
+              // LOGGED OUT VIEW: Hover Menu for Sign In
+              <Box onMouseLeave={handleCloseSignIn}>
+                <Button 
+                    onMouseEnter={handleOpenSignIn}
+                    aria-controls={isSignInOpen ? 'sign-in-menu' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={isSignInOpen ? 'true' : undefined}
+                    variant="contained" 
+                    color="primary"
+                >
+                    Sign In
+                </Button>
+                
+                <Menu
+                    id="sign-in-menu"
+                    anchorEl={anchorElSignIn}
+                    open={isSignInOpen}
+                    onClose={handleCloseSignIn}
+                    MenuListProps={{
+                        onMouseLeave: handleCloseSignIn,
+                        sx: { pointerEvents: 'auto' }
+                    }}
+                    disableRestoreFocus
+                    sx={{ pointerEvents: 'none' }} 
+                    PaperProps={{ sx: { pointerEvents: 'auto' } }}
+                >
+                    <MenuItem onClick={handleLogin}>
+                        Guest Sign In (User/OAuth)
+                    </MenuItem>
+                    <MenuItem onClick={handleEmployeeLoginClick}>
+                        Employee Sign In
+                    </MenuItem>
+                </Menu>
+              </Box>
             )}
           </Box>
         </Toolbar>

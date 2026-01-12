@@ -20,13 +20,7 @@ import AdminRoomTypes from "./pages/AdminRoomTypes";
 import AdminRooms from "./pages/AdminRooms";
 import AccountPage from "./pages/AccountPage";
 
-// Placeholder components for routes we haven't built yet
-const Placeholder = ({ title }: { title: string }) => (
-  <Box sx={{ p: 5, textAlign: "center" }}>
-    <h1>{title}</h1>
-    <p>Coming Soon...</p>
-  </Box>
-);
+
 
 function App() {
   const dispatch = useDispatch();
