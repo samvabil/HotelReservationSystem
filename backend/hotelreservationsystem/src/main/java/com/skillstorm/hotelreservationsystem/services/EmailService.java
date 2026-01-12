@@ -150,4 +150,45 @@ public class EmailService {
         mailSender.send(message);
         System.out.println("Update email sent to " + toEmail);
     }
+
+    public void sendStayCompletedEmail(String toEmail, Reservation reservation) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        
+        message.setFrom("huggins9000211@gmail.com");
+        message.setTo(toEmail);
+        message.setSubject("Level Up Lounge - Thank You for Staying with Us!");
+
+        String body = String.format("""
+            Dear %s,
+            
+            We hope you enjoyed your stay at Level Up Lounge!
+            
+            This email confirms that your reservation status has been updated to COMPLETED.
+            
+            STAY SUMMARY
+            --------------------------------------
+            Confirmation #: %s
+            Room: %s (%s)
+            Dates: %s to %s
+            Total Paid: $%.2f
+            --------------------------------------
+            
+            We hope to have the opportunity to host you again in the future for another gaming session!
+            
+            Warm Regards,
+            Level Up Lounge
+            """,
+            reservation.getUser().getFirstName(),
+            reservation.getId(),
+            reservation.getRoom().getRoomNumber(),
+            reservation.getRoom().getRoomType().getName(),
+            reservation.getCheckIn(),
+            reservation.getCheckOut(),
+            reservation.getTotalPrice()
+        );
+
+        message.setText(body);
+        mailSender.send(message);
+        System.out.println("Completion email sent to " + toEmail);
+    }
 }
