@@ -82,7 +82,13 @@ public class RoomService {
         
         for (RoomType type : matchingTypes) {
             List<Room> specificRooms = roomsByType.get(type.getId());
-            results.add(new BookingSearchResult(type, specificRooms));
+            
+            if (specificRooms != null) {
+                for (Room r : specificRooms) {
+                    r.setRoomType(type); 
+                }
+                results.add(new BookingSearchResult(type, specificRooms));
+            }
         }
 
         return results;

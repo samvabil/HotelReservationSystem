@@ -1,4 +1,3 @@
-// src/main/java/com/skillstorm/hotelreservationsystem/services/RoomTypeAdminService.java
 package com.skillstorm.hotelreservationsystem.services;
 
 import java.util.List;
@@ -86,5 +85,19 @@ public class RoomTypeAdminService {
         }
 
         roomTypeRepository.deleteById(id);
+    }
+
+    public RoomType addImage(String roomTypeId, String imageUrl) {
+        RoomType existing = roomTypeRepository.findById(roomTypeId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "RoomType not found: " + roomTypeId));
+
+        List<String> images = existing.getImages();
+        if (images == null) {
+            images = new java.util.ArrayList<>();
+        }
+        images.add(imageUrl);
+        existing.setImages(images);
+
+        return roomTypeRepository.save(existing);
     }
 }

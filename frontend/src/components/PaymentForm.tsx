@@ -1,8 +1,7 @@
 import { type FormEvent, useState } from 'react';
 import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
-import { Button, Alert, Box } from '@mui/material';
+import { Button, Alert } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import { type RootState } from '../store/store';
 import { useCreateReservationMutation } from '../services/reservationApi';
 import { clearBookingState } from '../store/bookingSlice';
@@ -10,12 +9,12 @@ import { clearBookingState } from '../store/bookingSlice';
 interface PaymentFormProps {
   totalCost: number;
   roomId: string;
+  onSuccess: () => void; // <--- NEW PROP
 }
 
-export default function PaymentForm({ totalCost, roomId }: PaymentFormProps) {
+export default function PaymentForm({ totalCost, roomId, onSuccess }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   // Get booking details from Redux
@@ -37,7 +36,7 @@ export default function PaymentForm({ totalCost, roomId }: PaymentFormProps) {
     // 1. Confirm Payment with Stripe
     const result = await stripe.confirmPayment({
       elements,
-      redirect: 'if_required', // Prevents redirecting away from the page
+      redirect: 'if_required', // Prevents auto-redirect
     });
 
     if (result.error) {
@@ -55,9 +54,10 @@ export default function PaymentForm({ totalCost, roomId }: PaymentFormProps) {
           paymentIntentId: result.paymentIntent.id
         }).unwrap();
 
-        // 3. Success! Clear state and redirect
+        // 3. Success! Clear state and Trigger Modal
         dispatch(clearBookingState());
-        navigate('/confirmation'); // Make sure you have this route!
+        
+        onSuccess(); // <--- CALL PARENT HANDLER INSTEAD OF NAVIGATING
 
       } catch (err) {
         console.error("Database Error:", err);

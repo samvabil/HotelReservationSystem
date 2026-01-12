@@ -24,4 +24,5 @@ public interface RoomRepository extends MongoRepository<Room, String> {
     boolean existsByRoomNumber(String roomNumber);
     
     long countByRoomTypeId(String roomTypeId);
+
 }

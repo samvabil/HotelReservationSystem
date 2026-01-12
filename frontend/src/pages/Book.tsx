@@ -4,34 +4,37 @@ import { type RootState } from '../store/store';
 import { useSearchRoomsQuery } from '../services/roomApi';
 import SearchRoomsBar from '../components/SearchRoomsBar';
 import RoomCard from '../components/RoomCard';
-import { useState } from 'react';
-import RoomSelectionModal from '../components/RoomSelectionModal';
+import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
 
 export default function Book() {
-  // 1. Get the current search criteria from Redux
+  const navigate = useNavigate(); // 2. Initialize hook
+
+  // Get search criteria from Redux
   const bookingState = useSelector((state: RootState) => state.booking);
 
-  // 2. Pass that state into the API Hook
-  // RTK Query automatically refetches whenever 'bookingState' changes!
+  // RTK Query automatically refetches whenever 'bookingState' changes
   const { 
     data: results, 
     isLoading, 
-    isFetching, // True when refetching in background
+    isFetching, 
     isError 
   } = useSearchRoomsQuery(bookingState);
 
-  const [selectedResult, setSelectedResult] = useState<any | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleSelectType = (roomTypeId: string) => {
-    console.log("User selected Type ID:", roomTypeId);
-    
+  // 3. New Logic: Auto-pick the first available room
+  const handleBookRoom = (roomTypeId: string) => {
+    // Find the result object for the clicked type
     const foundResult = results?.find(r => r.roomType.id === roomTypeId);
 
-    if (foundResult) {
-      // 2. Set the data and open the modal
-      setSelectedResult(foundResult);
-      setIsModalOpen(true);
+    if (foundResult && foundResult.availableRooms.length > 0) {
+      // GRAB THE FIRST ROOM
+      // Since the backend filtered them, any room in this list matches the user's criteria
+      const roomId = foundResult.availableRooms[0].id;
+      
+      // Redirect immediately
+      navigate(`/checkout/${roomId}`);
+    } else {
+      // Fallback safety (shouldn't happen if the card is displayed)
+      alert("Sorry, we just ran out of rooms for this type! Please try another.");
     }
   };
 
@@ -41,9 +44,9 @@ export default function Book() {
         Find Your Perfect Stay
       </Typography>
       
-      {/* Search Bar - This updates Redux, which triggers the query above */}
+      {/* Search Bar */}
       <Box sx={{ mb: 6 }}>
-        <SearchRoomsBar onSearch={() => { /* No-op: The Redux state change triggers the fetch */ }} />
+        <SearchRoomsBar onSearch={() => { /* No-op: Redux handles the trigger */ }} />
       </Box>
 
       {/* Results Section */}
@@ -60,21 +63,17 @@ export default function Book() {
         )}
         
         {isLoading && !results ? (
-             // Initial Loading State Skeleton
              <Box sx={{ textAlign: 'center', mt: 4 }}>
                 <CircularProgress />
                 <Typography sx={{ mt: 2 }}>Finding the best setup for you...</Typography>
              </Box>
         ) : (
-            // Results List
             <>
                 {results?.map((result) => (
                 <RoomCard 
                     key={result.roomType.id} 
                     roomType={result.roomType} 
-                    onBook={handleSelectType} 
-                    // Optional: You could pass 'availableCount' to the card if you want to show urgency
-                    // availableCount={result.availableRooms.length}
+                    onBook={handleBookRoom} // Pass the auto-pick handler
                 />
                 ))}
 
@@ -86,17 +85,6 @@ export default function Book() {
             </>
         )}
       </Box>
-      {selectedResult && (
-        <RoomSelectionModal
-          open={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          roomTypeName={selectedResult.roomType.name}
-          price={selectedResult.roomType.pricePerNight}
-          availableRooms={selectedResult.availableRooms} 
-          // Handle the final booking action
-          
-        />
-      )}
     </Container>
   );
 }

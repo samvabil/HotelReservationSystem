@@ -42,7 +42,7 @@ export default function RoomCard({ roomType, onBook }: RoomCardProps) {
               {roomType.name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-               {roomType.numBeedroom} Bedroom • {roomType.numBeds} {roomType.typeBed} Bed{roomType.numBeds > 1 ? 's' : ''} • {roomType.capacity} Guests
+               {roomType.numBedroom} Bedroom • {roomType.numBeds} {roomType.typeBed} Bed{roomType.numBeds > 1 ? 's' : ''} • {roomType.capacity} Guests
             </Typography>
           </Box>
           <Chip 
