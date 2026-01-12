@@ -1,18 +1,39 @@
+import { useEffect } from 'react';
 import { Container, Typography, Box, CircularProgress, Alert } from '@mui/material';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { type RootState } from '../store/store';
 import { useSearchRoomsQuery } from '../services/roomApi';
 import SearchRoomsBar from '../components/SearchRoomsBar';
 import RoomCard from '../components/RoomCard';
-import { useNavigate } from 'react-router-dom'; // 1. Import useNavigate
+import { useNavigate } from 'react-router-dom';
+import { clearBookingState } from '../store/bookingSlice'; // 1. Import Action
+import dayjs from 'dayjs'; // 2. Import Dayjs
 
 export default function Book() {
-  const navigate = useNavigate(); // 2. Initialize hook
+  const navigate = useNavigate();
+  const dispatch = useDispatch(); // 3. Init Dispatch
 
   // Get search criteria from Redux
   const bookingState = useSelector((state: RootState) => state.booking);
 
-  // RTK Query automatically refetches whenever 'bookingState' changes
+  // 4. SMART CLEANUP: Clear state only if dates are in the past
+  // This fixes the "days old dates" bug but keeps valid dates if a user 
+  // is redirected back here after logging in during a booking flow.
+  useEffect(() => {
+    if (bookingState.checkInDate) {
+        // Check if the saved check-in date is before today
+        const isStale = dayjs(bookingState.checkInDate).isBefore(dayjs(), 'day');
+        
+        if (isStale) {
+            console.log("Found stale dates in history. Resetting search...");
+            dispatch(clearBookingState());
+        }
+    }
+  }, [dispatch, bookingState.checkInDate]);
+
+  // User must have selected dates and guests to proceed
+  const canBook = !!(bookingState.checkInDate && bookingState.checkOutDate && bookingState.guestCount > 0);
+
   const { 
     data: results, 
     isLoading, 
@@ -20,20 +41,19 @@ export default function Book() {
     isError 
   } = useSearchRoomsQuery(bookingState);
 
-  // 3. New Logic: Auto-pick the first available room
   const handleBookRoom = (roomTypeId: string) => {
-    // Find the result object for the clicked type
+    if (!canBook) {
+        // This fallback alert should rarely be seen since the button is disabled
+        alert("Please select check-in and check-out dates first.");
+        return;
+    }
+
     const foundResult = results?.find(r => r.roomType.id === roomTypeId);
 
     if (foundResult && foundResult.availableRooms.length > 0) {
-      // GRAB THE FIRST ROOM
-      // Since the backend filtered them, any room in this list matches the user's criteria
       const roomId = foundResult.availableRooms[0].id;
-      
-      // Redirect immediately
       navigate(`/checkout/${roomId}`);
     } else {
-      // Fallback safety (shouldn't happen if the card is displayed)
       alert("Sorry, we just ran out of rooms for this type! Please try another.");
     }
   };
@@ -73,7 +93,8 @@ export default function Book() {
                 <RoomCard 
                     key={result.roomType.id} 
                     roomType={result.roomType} 
-                    onBook={handleBookRoom} // Pass the auto-pick handler
+                    onBook={handleBookRoom} 
+                    disabled={!canBook} 
                 />
                 ))}
 
