@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { 
   Box, Button, TextField, Paper, MenuItem, Grid, 
   Accordion, AccordionSummary, AccordionDetails, 
@@ -10,7 +9,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
 import { type RootState } from '../store/store';
 import { 
@@ -28,88 +27,48 @@ const ROOM_TYPES = ["Standard", "Suite", "Penthouse", "Gaming Bunker"];
 
 export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
   const dispatch = useDispatch();
-  
-  // 1. Read Global State from Redux (Persistence)
   const bookingState = useSelector((state: RootState) => state.booking);
 
-  // 2. Local State for Form Inputs (Prevents laggy typing)
-  // We initialize these from Redux so data persists on reload
-  const [dates, setDates] = useState({
-    checkIn: bookingState.checkInDate ? dayjs(bookingState.checkInDate) : null,
-    checkOut: bookingState.checkOutDate ? dayjs(bookingState.checkOutDate) : null,
-  });
-  const [guests, setGuests] = useState(bookingState.guestCount);
+  // --- HANDLERS ---
 
-  // Filters State
-  const [filters, setLocalFilters] = useState({
-    minPrice: bookingState.filters.minPrice ?? '', // Use '' for inputs
-    maxPrice: bookingState.filters.maxPrice ?? '',
-    roomType: bookingState.filters.roomType ?? '',
-    minBeds: bookingState.filters.minBeds ?? '',
-    minBedrooms: bookingState.filters.minBedrooms ?? '',
-    accessible: bookingState.filters.accessible ?? false,
-    petFriendly: bookingState.filters.petFriendly ?? false,
-    nonSmoking: bookingState.filters.nonSmoking ?? false,
-    hasJacuzzi: bookingState.filters.hasJacuzzi ?? false,
-  });
+  const handleDateChange = (key: 'checkIn' | 'checkOut', newValue: Dayjs | null) => {
+    const currentCheckIn = bookingState.checkInDate ? dayjs(bookingState.checkInDate) : null;
+    const currentCheckOut = bookingState.checkOutDate ? dayjs(bookingState.checkOutDate) : null;
+    
+    const newCheckIn = key === 'checkIn' ? newValue : currentCheckIn;
+    const newCheckOut = key === 'checkOut' ? newValue : currentCheckOut;
 
-  // Gaming State
-  const [gaming, setGaming] = useState({
-    pcCount: bookingState.gamingPreferences.pcCount ?? '',
-    pcTier: bookingState.gamingPreferences.pcTier ?? '',
-    consoles: bookingState.gamingPreferences.consoles,
-  });
-
-  // 3. Handlers
-  const handleSearch = () => {
-    // A. Dispatch Core Data
-    if (dates.checkIn && dates.checkOut) {
-      dispatch(setDatesAndGuests({
-        checkIn: dates.checkIn.toISOString(),
-        checkOut: dates.checkOut.toISOString(),
-        guests: guests
-      }));
-    }
-    else {
-        dispatch(setGuestCount(guests));
-    }
-
-    // B. Dispatch Filters (Convert '' back to null)
-    dispatch(setFilters({
-      minPrice: filters.minPrice === '' ? null : Number(filters.minPrice),
-      maxPrice: filters.maxPrice === '' ? null : Number(filters.maxPrice),
-      roomType: filters.roomType === '' ? null : filters.roomType as string,
-      minBeds: filters.minBeds === '' ? null : Number(filters.minBeds),
-      minBedrooms: filters.minBedrooms === '' ? null : Number(filters.minBedrooms),
-      // Booleans: If true -> true. If false -> null (don't care)
-      accessible: filters.accessible ? true : null,
-      petFriendly: filters.petFriendly ? true : null,
-      nonSmoking: filters.nonSmoking ? true : null,
-      hasJacuzzi: filters.hasJacuzzi ? true : null,
+    dispatch(setDatesAndGuests({
+      checkIn: newCheckIn ? newCheckIn.toISOString() : null as any,
+      checkOut: newCheckOut ? newCheckOut.toISOString() : null as any,
+      guests: bookingState.guestCount
     }));
+    onSearch();
+  };
 
-    // C. Dispatch Gaming
-    dispatch(setGamingPreferences({
-      pcCount: gaming.pcCount === '' ? null : Number(gaming.pcCount),
-      pcTier: gaming.pcTier === '' ? null : gaming.pcTier as string,
-      consoles: gaming.consoles
-    }));
+  const handleGuestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setGuestCount(Number(e.target.value)));
+    onSearch();
+  };
 
-    // D. Trigger Parent
+  const handleFilterChange = (key: keyof typeof bookingState.filters, value: any) => {
+    const newFilters = { ...bookingState.filters, [key]: value };
+    dispatch(setFilters(newFilters));
+    onSearch();
+  };
+
+  const handleGamingChange = (key: keyof typeof bookingState.gamingPreferences, value: any) => {
+    const newGaming = { ...bookingState.gamingPreferences, [key]: value };
+    dispatch(setGamingPreferences(newGaming));
     onSearch();
   };
 
   const handleClear = () => {
     dispatch(clearBookingState());
-    // Reset local state manually since we aren't listening to Redux changes continuously
-    setDates({ checkIn: null, checkOut: null });
-    setGuests(2);
-    setLocalFilters({
-      minPrice: '', maxPrice: '', roomType: '', minBeds: '', minBedrooms: '',
-      accessible: false, petFriendly: false, nonSmoking: false, hasJacuzzi: false
-    });
-    setGaming({ pcCount: '', pcTier: '', consoles: [] });
+    onSearch();
   };
+
+  const toNumberOrNull = (val: string) => val === '' ? null : Number(val);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -119,23 +78,23 @@ export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', mb: 2 }}>
           <DatePicker
             label="Check-in"
-            value={dates.checkIn}
-            onChange={(val) => setDates({ ...dates, checkIn: val })}
+            value={bookingState.checkInDate ? dayjs(bookingState.checkInDate) : null}
+            onChange={(val) => handleDateChange('checkIn', val)}
             disablePast
             slotProps={{ textField: { size: 'small', sx: { flexGrow: 1 } } }}
           />
           <DatePicker
             label="Check-out"
-            value={dates.checkOut}
-            minDate={dates.checkIn ? dates.checkIn.add(1, 'day') : undefined}
-            onChange={(val) => setDates({ ...dates, checkOut: val })}
+            value={bookingState.checkOutDate ? dayjs(bookingState.checkOutDate) : null}
+            minDate={bookingState.checkInDate ? dayjs(bookingState.checkInDate).add(1, 'day') : undefined}
+            onChange={(val) => handleDateChange('checkOut', val)}
             slotProps={{ textField: { size: 'small', sx: { flexGrow: 1 } } }}
           />
           <TextField
             select
             label="Guests"
-            value={guests}
-            onChange={(e) => setGuests(Number(e.target.value))}
+            value={bookingState.guestCount}
+            onChange={handleGuestChange}
             size="small"
             sx={{ minWidth: 100 }}
           >
@@ -143,16 +102,6 @@ export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
               <MenuItem key={num} value={num}>{num} Guest{num > 1 ? 's' : ''}</MenuItem>
             ))}
           </TextField>
-
-          <Button 
-            variant="contained" 
-            size="large" 
-            onClick={handleSearch}
-            color="secondary"
-            sx={{ flexGrow: 0, px: 4 }}
-          >
-            Search
-          </Button>
         </Box>
 
         {/* --- ACCORDION: ADVANCED FILTERS --- */}
@@ -164,6 +113,8 @@ export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
             </Box>
           </AccordionSummary>
           <AccordionDetails>
+            
+            {/* FIXED GRID SYNTAX HERE */}
             <Grid container spacing={3}>
               
               {/* 1. ROOM DETAILS */}
@@ -171,24 +122,29 @@ export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
                 <Typography variant="subtitle2" gutterBottom color="primary">Room Details</Typography>
                 <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                    <TextField label="Min Price" size="small" type="number" 
-                      value={filters.minPrice} onChange={(e) => setLocalFilters({...filters, minPrice: e.target.value})} 
+                      value={bookingState.filters.minPrice ?? ''} 
+                      onChange={(e) => handleFilterChange('minPrice', toNumberOrNull(e.target.value))} 
                    />
                    <TextField label="Max Price" size="small" type="number" 
-                      value={filters.maxPrice} onChange={(e) => setLocalFilters({...filters, maxPrice: e.target.value})} 
+                      value={bookingState.filters.maxPrice ?? ''} 
+                      onChange={(e) => handleFilterChange('maxPrice', toNumberOrNull(e.target.value))} 
                    />
                 </Box>
                 <TextField select label="Room Type" size="small" fullWidth sx={{ mb: 2 }}
-                    value={filters.roomType} onChange={(e) => setLocalFilters({...filters, roomType: e.target.value})}
+                    value={bookingState.filters.roomType ?? ''}
+                    onChange={(e) => handleFilterChange('roomType', e.target.value === '' ? null : e.target.value)}
                 >
                     <MenuItem value="">Any</MenuItem>
                     {ROOM_TYPES.map(type => <MenuItem key={type} value={type}>{type}</MenuItem>)}
                 </TextField>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                     <TextField label="Min Beds" size="small" type="number" fullWidth
-                      value={filters.minBeds} onChange={(e) => setLocalFilters({...filters, minBeds: e.target.value})} 
+                      value={bookingState.filters.minBeds ?? ''} 
+                      onChange={(e) => handleFilterChange('minBeds', toNumberOrNull(e.target.value))} 
                     />
                     <TextField label="Bedrooms" size="small" type="number" fullWidth
-                      value={filters.minBedrooms} onChange={(e) => setLocalFilters({...filters, minBedrooms: e.target.value})} 
+                      value={bookingState.filters.minBedrooms ?? ''} 
+                      onChange={(e) => handleFilterChange('minBedrooms', toNumberOrNull(e.target.value))} 
                     />
                 </Box>
               </Grid>
@@ -198,16 +154,20 @@ export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
                 <Typography variant="subtitle2" gutterBottom color="primary">Amenities</Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column' }}>
                   <FormControlLabel control={
-                    <Checkbox checked={!!filters.accessible} onChange={(e) => setLocalFilters({...filters, accessible: e.target.checked})} />
+                    <Checkbox checked={!!bookingState.filters.accessible} 
+                      onChange={(e) => handleFilterChange('accessible', e.target.checked ? true : null)} />
                   } label="Accessible" />
                   <FormControlLabel control={
-                    <Checkbox checked={!!filters.petFriendly} onChange={(e) => setLocalFilters({...filters, petFriendly: e.target.checked})} />
+                    <Checkbox checked={!!bookingState.filters.petFriendly} 
+                      onChange={(e) => handleFilterChange('petFriendly', e.target.checked ? true : null)} />
                   } label="Pet Friendly" />
                   <FormControlLabel control={
-                    <Checkbox checked={!!filters.nonSmoking} onChange={(e) => setLocalFilters({...filters, nonSmoking: e.target.checked})} />
+                    <Checkbox checked={!!bookingState.filters.nonSmoking} 
+                      onChange={(e) => handleFilterChange('nonSmoking', e.target.checked ? true : null)} />
                   } label="Non-Smoking" />
                   <FormControlLabel control={
-                    <Checkbox checked={!!filters.hasJacuzzi} onChange={(e) => setLocalFilters({...filters, hasJacuzzi: e.target.checked})} />
+                    <Checkbox checked={!!bookingState.filters.hasJacuzzi} 
+                      onChange={(e) => handleFilterChange('hasJacuzzi', e.target.checked ? true : null)} />
                   } label="Jacuzzi" />
                 </Box>
               </Grid>
@@ -217,10 +177,12 @@ export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
                 <Typography variant="subtitle2" gutterBottom color="secondary">Gaming Setup</Typography>
                 <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                     <TextField label="# of PCs" size="small" type="number" sx={{ width: '40%' }}
-                        value={gaming.pcCount} onChange={(e) => setGaming({...gaming, pcCount: e.target.value})}
+                        value={bookingState.gamingPreferences.pcCount ?? ''} 
+                        onChange={(e) => handleGamingChange('pcCount', toNumberOrNull(e.target.value))}
                     />
                      <TextField select label="PC Tier" size="small" sx={{ width: '60%' }}
-                        value={gaming.pcTier} onChange={(e) => setGaming({...gaming, pcTier: e.target.value})}
+                        value={bookingState.gamingPreferences.pcTier ?? ''} 
+                        onChange={(e) => handleGamingChange('pcTier', e.target.value === '' ? null : e.target.value)}
                      >
                         <MenuItem value="">Any</MenuItem>
                         {PC_TIER_OPTIONS.map(tier => <MenuItem key={tier} value={tier}>{tier}</MenuItem>)}
@@ -231,8 +193,8 @@ export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
                   <InputLabel>Consoles</InputLabel>
                   <Select
                     multiple
-                    value={gaming.consoles}
-                    onChange={(e) => setGaming({...gaming, consoles: typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value })}
+                    value={bookingState.gamingPreferences.consoles || []}
+                    onChange={(e) => handleGamingChange('consoles', typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
                     input={<OutlinedInput label="Consoles" />}
                     renderValue={(selected) => (
                       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
