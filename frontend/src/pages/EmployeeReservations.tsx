@@ -68,6 +68,14 @@ function statusColor(status: ReservationStatus) {
   }
 }
 
+function prettyStatus(s: string) {
+  return s
+    .toLowerCase()
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 export default function EmployeeReservations() {
   // Filters
   const [guestEmail, setGuestEmail] = useState("");
@@ -416,7 +424,6 @@ export default function EmployeeReservations() {
                         <TableCell>Dates</TableCell>
                         <TableCell align="right">Guests</TableCell>
                         <TableCell>Status</TableCell>
-                        <TableCell>Payment</TableCell>
                         <TableCell align="right">Amount</TableCell>
                         <TableCell align="center">Checked In</TableCell>
                         <TableCell align="right">Actions</TableCell>
@@ -425,7 +432,6 @@ export default function EmployeeReservations() {
                     <TableBody>
                       {reservationsPage?.items?.map((r) => {
                         const checkedIn = r.status === "CHECKED_IN";
-                        const paymentLabel = r.paymentStatus ?? "N/A";
                         const amountCents = r.transaction?.amountCents;
 
                         return (
@@ -460,16 +466,8 @@ export default function EmployeeReservations() {
                             <TableCell>
                               <Chip
                                 size="small"
-                                label={r.status}
+                                label={prettyStatus(r.status)}
                                 color={statusColor(r.status) as any}
-                                variant="outlined"
-                              />
-                            </TableCell>
-
-                            <TableCell>
-                              <Chip
-                                size="small"
-                                label={paymentLabel}
                                 variant="outlined"
                               />
                             </TableCell>
