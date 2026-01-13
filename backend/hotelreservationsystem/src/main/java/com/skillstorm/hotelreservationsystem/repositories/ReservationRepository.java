@@ -10,7 +10,7 @@ import com.skillstorm.hotelreservationsystem.models.Reservation;
 import com.skillstorm.hotelreservationsystem.models.Reservation.ReservationStatus;
 
 @Repository
-public interface ReservationRepository extends MongoRepository<Reservation, String>  {
+public interface ReservationRepository extends MongoRepository<Reservation, String>, ReservationRepositoryCustom  {
     List<Reservation> findByUserId(String userId);
     List<Reservation> findByCheckOutBeforeAndStatus(LocalDate date, ReservationStatus status);
 }

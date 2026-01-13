@@ -1,18 +1,27 @@
 package com.skillstorm.hotelreservationsystem.services;
 
-import com.skillstorm.hotelreservationsystem.dto.ReservationRequest;
-import com.skillstorm.hotelreservationsystem.models.*;
-import com.skillstorm.hotelreservationsystem.repositories.*;
-import com.stripe.model.Refund;
-import com.stripe.param.RefundCreateParams;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.skillstorm.hotelreservationsystem.dto.ReservationRequest;
+import com.skillstorm.hotelreservationsystem.models.Reservation;
+import com.skillstorm.hotelreservationsystem.models.Room;
+import com.skillstorm.hotelreservationsystem.models.RoomType;
+import com.skillstorm.hotelreservationsystem.models.User;
+import com.skillstorm.hotelreservationsystem.repositories.ReservationRepository;
+import com.skillstorm.hotelreservationsystem.repositories.RoomRepository;
+import com.skillstorm.hotelreservationsystem.repositories.RoomTypeRepository;
+import com.skillstorm.hotelreservationsystem.repositories.UserRepository;
+import com.stripe.model.Refund;
+import com.stripe.param.RefundCreateParams;
 
 @Service
 public class ReservationService {
@@ -51,6 +60,12 @@ public class ReservationService {
         
         double totalPrice = type.getPricePerNight() * nights;
 
+        // Calculate amount in cents for payment snapshot
+        long amountCents = BigDecimal.valueOf(totalPrice)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(0, RoundingMode.HALF_UP)
+                .longValue();
+
         // 3. Create Reservation (Using STRING IDs)
         Reservation reservation = new Reservation(
                 user.getId(),
@@ -62,6 +77,17 @@ public class ReservationService {
                 Reservation.ReservationStatus.CONFIRMED,
                 request.getPaymentIntentId()
         );
+
+        // Payment snapshot
+        reservation.setPaymentStatus(Reservation.PaymentStatus.PAID);
+        Reservation.PaymentTransaction txn = new Reservation.PaymentTransaction();
+        txn.setProvider("STRIPE");
+        txn.setTransactionId(request.getPaymentIntentId());
+        txn.setAmountCents(amountCents);
+        txn.setCurrency("usd");
+        txn.setStatus("SUCCEEDED");
+        txn.setPaidAt(Instant.now());
+        reservation.setTransaction(txn);
         
         // 4. Save to DB (Saves "userId": "..." and "roomId": "...")
         Reservation savedReservation = reservationRepository.save(reservation);
@@ -137,6 +163,11 @@ public class ReservationService {
                     // Skip Stripe, just update DB
                     System.out.println("Test Reservation Canceled. Skipping Stripe Refund for: " + pid);
                     r.setStatus(Reservation.ReservationStatus.REFUNDED);
+                    r.setPaymentStatus(Reservation.PaymentStatus.REFUNDED);
+                    if (r.getTransaction() != null) {
+                        r.getTransaction().setStatus("REFUNDED");
+                        r.getTransaction().setRefundedAt(Instant.now());
+                    }
                 } 
                 // --- REAL STRIPE REFUND ---
                 else if (pid != null && !pid.isEmpty()) {
@@ -148,6 +179,12 @@ public class ReservationService {
                         Refund refund = Refund.create(params);
                         System.out.println("Stripe Refund Successful: " + refund.getId());
                         r.setStatus(Reservation.ReservationStatus.REFUNDED);
+                        r.setPaymentStatus(Reservation.PaymentStatus.REFUNDED);
+                        if (r.getTransaction() != null) {
+                            r.getTransaction().setStatus("REFUNDED");
+                            r.getTransaction().setRefundedAt(Instant.now());
+                            r.getTransaction().setRefundId(refund.getId());
+                        }
                         
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -161,6 +198,7 @@ public class ReservationService {
 
             } else {
                 // Less than 72 hours = No Refund
+                // Keep paymentStatus as PAID since the money is retained
                 r.setStatus(Reservation.ReservationStatus.CANCELLED);
             }
 

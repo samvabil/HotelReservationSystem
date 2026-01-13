@@ -25,4 +25,11 @@ public interface RoomRepository extends MongoRepository<Room, String> {
     
     long countByRoomTypeId(String roomTypeId);
 
+    // New helpers for lookup and reconciliation
+    List<Room> findByRoomTypeId(String roomTypeId);
+
+    List<Room> findByOccupiedTrue();
+
+    List<Room> findByOccupiedTrueAndIdNotIn(List<String> ids);
+
 }
