@@ -14,6 +14,10 @@ export default function EmployeeDashboard() {
     (state: RootState) => state.employeeAuth
   );
 
+  if (!isEmployeeAuthenticated || !employee) {
+    navigate("/employee/login", { replace: true });
+    return null;
+  }
   const isAdmin = employee?.roles?.includes("ROLE_ADMIN");
 
   const handleLogout = async () => {
@@ -55,6 +59,12 @@ export default function EmployeeDashboard() {
             <Typography sx={{ mb: 3 }}>
               Role: <strong>{employee.roles.join(", ")}</strong>
             </Typography>
+
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>
+              <Button variant="contained" onClick={() => navigate("/employee/reservations")}>
+                Manage Reservations
+              </Button>
+            </Stack>
 
             {isAdmin && (
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }}>

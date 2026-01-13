@@ -140,6 +140,9 @@ export default function Navbar() {
             {/* 2. EMPLOYEE LINKS */}
             {isEmployeeAuthenticated && (
                 <>
+                    <Button onClick={() => navigate('/employee/reservations')} sx={{ my: 2, color: 'white', display: 'block' }}>
+                        Manage Reservations
+                    </Button>
                     <Button onClick={() => navigate('/employee/admin/rooms')} sx={{ my: 2, color: 'white', display: 'block' }}>
                         Manage Rooms
                     </Button>

@@ -13,6 +13,7 @@ import { useGetCurrentUserQuery } from "./services/userAuthApi";
 import { useGetEmployeeMeQuery } from "./services/employeeAuthApi";
 import EmployeeLogin from "./pages/EmployeeLogin";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import EmployeeReservations from "./pages/EmployeeReservations";
 import RequireAuth from "./components/RequireAuth";
 import RequireEmployeeAuth from "./components/RequireEmployeeAuth";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -84,6 +85,14 @@ function App() {
                   <EmployeeDashboard />
                 </RequireEmployeeAuth>
               } 
+            />
+            <Route
+              path="/employee/reservations"
+              element={
+                <RequireEmployeeAuth>
+                  <EmployeeReservations />
+                </RequireEmployeeAuth>
+              }
             />
             <Route 
               path="/employee/admin/room-types" 
