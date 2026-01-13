@@ -137,8 +137,31 @@ public class EmployeeReservationService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only CONFIRMED reservations can be checked in.");
         }
 
+        LocalDate today = LocalDate.now();
+
+        if (today.isBefore(r.getCheckIn())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot check in before the scheduled check-in date: " + r.getCheckIn()
+            );
+        }
+
+        if (!today.isBefore(r.getCheckOut())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Cannot check in on/after the scheduled check-out date: " + r.getCheckOut()
+            );
+        }
+
         Room room = roomRepository.findById(r.getRoomId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found: " + r.getRoomId()));
+
+        if (room.isOccupied()) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Room is already occupied and cannot be checked in: " + room.getRoomNumber()
+            );
+        }
 
         room.setOccupied(true);
         roomRepository.save(room);
