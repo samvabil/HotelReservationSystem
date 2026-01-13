@@ -5,7 +5,7 @@ import { type RootState } from '../store/store';
 import { Box, CircularProgress, Typography } from '@mui/material';
 
 // ⚠️ MAKE SURE THIS MATCHES YOUR SPRING BOOT PORT
-const SPRING_BOOT_URL = "http://localhost:8080";
+const SPRING_BOOT_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const RequireAuth = ({ children }: { children: React.ReactElement }) => {
     // 1. Check your Redux store to see if the user is logged in

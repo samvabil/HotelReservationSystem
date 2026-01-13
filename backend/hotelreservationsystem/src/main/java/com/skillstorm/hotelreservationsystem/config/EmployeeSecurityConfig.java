@@ -28,11 +28,16 @@ public class EmployeeSecurityConfig {
             .securityMatcher("/api/employees/**")
 
             // CSRF enabled, but ignore the bootstrap session endpoint
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .csrfTokenRequestHandler(requestHandler)
-                .ignoringRequestMatchers("/api/employees/session")
-            )
+            .csrf(csrf -> {
+                // 1. Create the repo and fix the path for the /api architecture
+                CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+                repository.setCookiePath("/"); 
+
+                csrf.csrfTokenRepository(repository)
+                    .csrfTokenRequestHandler(requestHandler)
+                    // 2. Keep your existing ignore rules
+                    .ignoringRequestMatchers("/api/employees/session");
+            })
 
             .cors(Customizer.withDefaults())
 

@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 // Define the base URL for your backend
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 export const apiSlice = createApi({
   reducerPath: 'api', // The name of the slice in the Redux store
@@ -31,5 +31,5 @@ export const apiSlice = createApi({
   }),
   // Tag Types are used for caching and invalidation
   tagTypes: ['User', 'Room', 'RoomType', 'Booking', 'Reservation'], 
-  endpoints: (builder) => ({}), // We inject endpoints in separate files
+  endpoints: () => ({}), // We inject endpoints in separate files
 });

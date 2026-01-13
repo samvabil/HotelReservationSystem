@@ -1,5 +1,18 @@
 server:
   port: 5000
+  # 1. Trust the CloudFront headers so redirects use "https://"
+  forward-headers-strategy: framework
+  
+  servlet:
+    context-path: /api
+    session:
+      cookie:
+        # 2. Force the cookie to be Secure (HTTPS only)
+        secure: true
+        # 3. Allow the cookie to travel between Frontend & Backend domains
+        same-site: none
+        # 4. (Optional) Ensure the cookie isn't accessible via JavaScript
+        http-only: true
 
 spring:
     application:

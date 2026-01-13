@@ -103,7 +103,7 @@ const bookingSlice = createSlice({
       localStorage.setItem('bookingState', JSON.stringify(state));
     },
 
-    clearBookingState: (state) => {
+    clearBookingState: () => {
       localStorage.removeItem('bookingState');
       return initialState;
     }

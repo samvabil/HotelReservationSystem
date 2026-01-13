@@ -10,7 +10,7 @@ export default function EmployeeDashboard() {
   const navigate = useNavigate();
   const [logoutEmployee] = useLogoutEmployeeMutation();
 
-  const { employee, isEmployeeAuthenticated } = useSelector(
+  const { employee } = useSelector(
     (state: RootState) => state.employeeAuth
   );
 
@@ -49,11 +49,11 @@ export default function EmployeeDashboard() {
             </Typography>
 
             <Typography sx={{ mb: 1 }}>
-              Employee ID: <strong>{employee.employeeId}</strong>
+              Employee ID: <strong>{employee?.employeeId}</strong>
             </Typography>
 
             <Typography sx={{ mb: 3 }}>
-              Role: <strong>{employee.roles.join(", ")}</strong>
+              Role: <strong>{employee?.roles.join(", ")}</strong>
             </Typography>
 
             {isAdmin && (

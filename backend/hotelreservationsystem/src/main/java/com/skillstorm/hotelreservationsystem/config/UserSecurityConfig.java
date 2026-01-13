@@ -57,12 +57,18 @@ public class UserSecurityConfig {
             // 1. ENABLE CSRF (The secure way)
             // Uses CookieCsrfTokenRepository so frontends can read the XSRF-TOKEN cookie
             // and return it in the X-XSRF-TOKEN header.
-            //.csrf(csrf -> csrf.disable())
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                // 2. PLUG IN THE HANDLER HERE
-                .csrfTokenRequestHandler(requestHandler)
-            )
+            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> {
+                // A. Create the repository
+                CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+                
+                // B. THE FIX: Force cookie to be visible at the Root ("/")
+                // Otherwise, it defaults to "/api" and React can't see it!
+                repository.setCookiePath("/"); 
+                
+                csrf.csrfTokenRepository(repository)
+                    .csrfTokenRequestHandler(requestHandler);
+            })
 
             .cors(Customizer.withDefaults())
 
@@ -89,11 +95,26 @@ public class UserSecurityConfig {
 
             .logout(logout -> logout
                 .logoutUrl("/logout") // The URL we call from React
-                .logoutSuccessHandler((request, response, authentication) -> {
-                    response.setStatus(HttpServletResponse.SC_OK); // Return 200 instead of redirect
+                // A. Manually delete the cookie with the correct flags
+                .addLogoutHandler((request, response, authentication) -> {
+                    // 1. Kill JSESSIONID
+                    jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("JSESSIONID", null);
+                    cookie.setPath("/");
+                    cookie.setHttpOnly(true);
+                    cookie.setMaxAge(0); // 0 = Delete Immediately
+                    
+                    // CRITICAL: These must match what you set in application-prod.yml
+                    cookie.setSecure(true); 
+                    cookie.setAttribute("SameSite", "None"); 
+                    
+                    response.addCookie(cookie);
                 })
-                .invalidateHttpSession(true) // Kill the server session
-                .deleteCookies("JSESSIONID", "XSRF-TOKEN") // Kill the browser cookie
+                
+                // B. Stop the redirect (Return 200 OK for React)
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                })
+                .invalidateHttpSession(true)
             )
 
 

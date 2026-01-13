@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, Menu, MenuItem, Avatar, Tooltip, Divider } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, Menu, MenuItem, Avatar, Tooltip } from '@mui/material';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import { Link, useNavigate, useLocation } from 'react-router-dom'; 
 import { useSelector, useDispatch } from 'react-redux';
@@ -14,7 +14,7 @@ import { clearEmployee } from '../store/employeeAuthSlice';
 import { useLogoutEmployeeMutation } from '../services/employeeAuthApi';
 
 // MAKE SURE THIS PORT MATCHES YOUR SPRING BOOT SERVER
-const SPRING_BOOT_URL = "http://localhost:8080";
+const SPRING_BOOT_URL = import.meta.env.VITE_API_URL;
 
 export default function Navbar() {
   const navigate = useNavigate();

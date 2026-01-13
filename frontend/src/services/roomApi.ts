@@ -55,7 +55,7 @@ export const roomApi = apiSlice.injectEndpoints({
       query: (id) => `/rooms/${id}`,
       
       // 2. (Optional) Cache settings - keep the data fresh
-      providesTags: (result, error, id) => [{ type: 'Room', id }],
+      providesTags: (_result, _error, id) => [{ type: 'Room', id }],
     }
   ),
   }),
