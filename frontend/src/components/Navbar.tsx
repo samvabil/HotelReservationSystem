@@ -13,6 +13,8 @@ import { useLogoutUserMutation } from '../services/userAuthApi';
 import { clearEmployee } from '../store/employeeAuthSlice';
 import { useLogoutEmployeeMutation } from '../services/employeeAuthApi';
 
+import BadgeIcon from "@mui/icons-material/Badge";
+
 // MAKE SURE THIS PORT MATCHES YOUR SPRING BOOT SERVER
 const SPRING_BOOT_URL = import.meta.env.VITE_API_URL;
 
@@ -87,7 +89,6 @@ export default function Navbar() {
 
   // Helper for Display Logic
   const getProfileSrc = () => {
-    if (isEmployeeAuthenticated) return "https://via.placeholder.com/150?text=Staff";
     if (isAuthenticated && user) return user.auth?.avatarUrl;
     return undefined;
   };
@@ -140,14 +141,14 @@ export default function Navbar() {
             {/* 2. EMPLOYEE LINKS */}
             {isEmployeeAuthenticated && (
                 <>
+                    <Button onClick={() => navigate('/employee/reservations')} sx={{ my: 2, color: 'white', display: 'block' }}>
+                        Manage Reservations
+                    </Button>
                     <Button onClick={() => navigate('/employee/admin/rooms')} sx={{ my: 2, color: 'white', display: 'block' }}>
                         Manage Rooms
                     </Button>
                     <Button onClick={() => navigate('/employee/admin/room-types')} sx={{ my: 2, color: 'white', display: 'block' }}>
                         Manage Room Types
-                    </Button>
-                    <Button onClick={() => navigate('/employee/dashboard')} sx={{ my: 2, color: 'white', display: 'block' }}>
-                        Employee Dashboard
                     </Button>
                 </>
             )}
@@ -158,11 +159,17 @@ export default function Navbar() {
               <Box sx={{ flexGrow: 0 }}>
                 <Tooltip title="Open settings">
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}> 
-                    <Avatar 
-                        alt={getProfileName()} 
-                        src={getProfileSrc()} 
-                        imgProps={{ referrerPolicy: "no-referrer" }} 
-                    />
+                    {isEmployeeAuthenticated ? (
+                      <Avatar alt={getProfileName()}>
+                        <BadgeIcon />
+                      </Avatar>
+                    ) : (
+                      <Avatar
+                        alt={getProfileName()}
+                        src={getProfileSrc()}
+                        imgProps={{ referrerPolicy: "no-referrer" }}
+                      />
+                    )}
                   </IconButton>
                 </Tooltip>
                 

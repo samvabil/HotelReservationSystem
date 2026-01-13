@@ -33,7 +33,7 @@ export default function EmployeeLogin() {
       await startSession({ email, password }).unwrap();
       const me = await getMe().unwrap();
       dispatch(setEmployee(me));
-      const redirectTo = sessionStorage.getItem("employeeRedirectPath") || "/employee/dashboard";
+      const redirectTo = sessionStorage.getItem("employeeRedirectPath") || "/employee/reservations";
       sessionStorage.removeItem("employeeRedirectPath");
       navigate(redirectTo, { replace: true });
     } catch (err: any) {

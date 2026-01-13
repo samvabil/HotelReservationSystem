@@ -1,5 +1,6 @@
 package com.skillstorm.hotelreservationsystem.models;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 import org.springframework.data.annotation.Id;
@@ -86,6 +87,21 @@ public class Reservation {
      */
     private String paymentIntentId;
 
+    /**
+     * The payment status of the reservation.
+     */
+    private PaymentStatus paymentStatus;
+
+    /**
+     * Payment transaction details including provider, amount, and status.
+     */
+    private PaymentTransaction transaction;
+
+    /**
+     * The timestamp when the guest checked in.
+     */
+    private Instant checkedInAt;
+
     // --- Enum for Status ---
 
     /**
@@ -103,6 +119,11 @@ public class Reservation {
         CONFIRMED,
 
         /**
+         * The guest has checked in to the reservation.
+         */
+        CHECKED_IN,
+
+        /**
          * The reservation was cancelled by the user or admin before check-in.
          */
         CANCELLED,
@@ -116,6 +137,67 @@ public class Reservation {
          * The reservation happend in the past.
          */
         COMPLETED
+    }
+
+    /**
+     * Enumeration representing the payment status of a reservation.
+     */
+    public enum PaymentStatus {
+        /**
+         * Payment has not yet been processed.
+         */
+        UNPAID,
+
+        /**
+         * Payment has been successfully processed.
+         */
+        PAID,
+
+        /**
+         * Payment has been refunded.
+         */
+        REFUNDED
+    }
+
+    /**
+     * Single snapshot record for payment transaction details.
+     * Status can be updated to REFUNDED and include refund info if needed.
+     */
+    public static class PaymentTransaction {
+        private String provider;       // "STRIPE"
+        private String transactionId;  // use paymentIntentId as stable id
+        private long amountCents;
+        private String currency;       // "usd"
+        private String status;         // "SUCCEEDED", "REFUNDED"
+        private Instant paidAt;
+
+        // Optional refund info, still within the "single record" approach
+        private String refundId;
+        private Instant refundedAt;
+
+        public String getProvider() { return provider; }
+        public void setProvider(String provider) { this.provider = provider; }
+
+        public String getTransactionId() { return transactionId; }
+        public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+
+        public long getAmountCents() { return amountCents; }
+        public void setAmountCents(long amountCents) { this.amountCents = amountCents; }
+
+        public String getCurrency() { return currency; }
+        public void setCurrency(String currency) { this.currency = currency; }
+
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+
+        public Instant getPaidAt() { return paidAt; }
+        public void setPaidAt(Instant paidAt) { this.paidAt = paidAt; }
+
+        public String getRefundId() { return refundId; }
+        public void setRefundId(String refundId) { this.refundId = refundId; }
+
+        public Instant getRefundedAt() { return refundedAt; }
+        public void setRefundedAt(Instant refundedAt) { this.refundedAt = refundedAt; }
     }
 
     // --- Overrides ---
@@ -354,5 +436,59 @@ public class Reservation {
      */
     public void setPaymentIntentId(String paymentIntentId) {
         this.paymentIntentId = paymentIntentId;
+    }
+
+    /**
+     * Gets the payment status of the reservation.
+     *
+     * @return The payment status.
+     */
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    /**
+     * Sets the payment status of the reservation.
+     *
+     * @param paymentStatus The new payment status.
+     */
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+
+    /**
+     * Gets the payment transaction details.
+     *
+     * @return The payment transaction.
+     */
+    public PaymentTransaction getTransaction() {
+        return transaction;
+    }
+
+    /**
+     * Sets the payment transaction details.
+     *
+     * @param transaction The new payment transaction.
+     */
+    public void setTransaction(PaymentTransaction transaction) {
+        this.transaction = transaction;
+    }
+
+    /**
+     * Gets the check-in timestamp.
+     *
+     * @return The check-in timestamp.
+     */
+    public Instant getCheckedInAt() {
+        return checkedInAt;
+    }
+
+    /**
+     * Sets the check-in timestamp.
+     *
+     * @param checkedInAt The new check-in timestamp.
+     */
+    public void setCheckedInAt(Instant checkedInAt) {
+        this.checkedInAt = checkedInAt;
     }
 }

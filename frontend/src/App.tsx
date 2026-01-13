@@ -1,7 +1,7 @@
 import { ThemeProvider, CssBaseline, Box, CircularProgress } from "@mui/material";
 import { theme } from "./theme";
 import Navbar from "./components/Navbar";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Book from "./pages/Book"
 import LoginSuccess from "./components/LoginSuccess";
@@ -12,7 +12,7 @@ import { setEmployee } from "./store/employeeAuthSlice";
 import { useGetCurrentUserQuery } from "./services/userAuthApi";
 import { useGetEmployeeMeQuery } from "./services/employeeAuthApi";
 import EmployeeLogin from "./pages/EmployeeLogin";
-import EmployeeDashboard from "./pages/EmployeeDashboard";
+import EmployeeReservations from "./pages/EmployeeReservations";
 import RequireAuth from "./components/RequireAuth";
 import RequireEmployeeAuth from "./components/RequireEmployeeAuth";
 import CheckoutPage from "./pages/CheckoutPage";
@@ -69,21 +69,31 @@ function App() {
             <Route path="/account" element={<AccountPage />} />
             <Route path="/login-success" element={<LoginSuccess />} />
             <Route path="/employee/login" element={<EmployeeLogin />} />
-            <Route 
-              path="/employee" 
+            
+            <Route
+              path="/employee"
               element={
                 <RequireEmployeeAuth>
-                  <EmployeeDashboard />
+                  <Navigate to="/employee/reservations" replace />
                 </RequireEmployeeAuth>
-              } 
+              }
             />
-            <Route 
-              path="/employee/dashboard" 
+
+            <Route
+              path="/employee/dashboard"
               element={
                 <RequireEmployeeAuth>
-                  <EmployeeDashboard />
+                  <Navigate to="/employee/reservations" replace />
                 </RequireEmployeeAuth>
-              } 
+              }
+            />
+            <Route
+              path="/employee/reservations"
+              element={
+                <RequireEmployeeAuth>
+                  <EmployeeReservations />
+                </RequireEmployeeAuth>
+              }
             />
             <Route 
               path="/employee/admin/room-types" 
