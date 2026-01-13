@@ -1,3 +1,6 @@
+server:
+  port: 5000
+
 spring:
     application:
         name : hotelreservationsystem
@@ -20,7 +23,7 @@ spring:
                         - profile
                         - email
                         # This must match what you put in Google Cloud Console
-                        redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+                        redirect-uri: ${GOOGLE_REDIRECT_URI}
                         client-name: Google
     mail:
         host: smtp.gmail.com
@@ -45,4 +48,5 @@ aws:
 
 app:
   cors:
-    allowed-origins: http://localhost:5173
+    # This grabs the value from the 'FRONTEND_URL' env var in Elastic Beanstalk
+    allowed-origins: ${FRONTEND_URL}

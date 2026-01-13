@@ -1,5 +1,6 @@
 package com.skillstorm.hotelreservationsystem.config;
 
+import org.springframework.beans.factory.annotation.Value; // Import this
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -7,9 +8,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class CorsConfig {
+
+    // Inject the value from application.yml
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
     @Bean
     public CorsFilter corsFilter() {
@@ -19,9 +25,8 @@ public class CorsConfig {
         // 1. Allow credentials (cookies)
         config.setAllowCredentials(true);
         
-        // 2. Allow your specific Frontend URL
-        // YOU CANNOT USE "*" IF ALLOW CREDENTIALS IS TRUE
-        config.addAllowedOrigin("http://localhost:5173");
+        // 2. Allow specific Frontend URL (Dynamic)
+        config.setAllowedOrigins(List.of(allowedOrigins)); 
         
         // 3. Allow standard headers and methods
         config.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-XSRF-TOKEN"));
