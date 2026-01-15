@@ -67,7 +67,8 @@ jobs:
           region: ${{ secrets.AWS_REGION }}
           application_name: "Level-Up-Lounge"
           environment_name: "Level-Up-Lounge-env-1"
-          version_label: "prod-${{ github.sha }}-${{ github.run_id }}"
+          version_label: ${{ format('prod-{0}-{1}-{2}', github.sha, github.run_id, github.run_attempt) }}
+          use_existing_version_if_available: true
           deployment_package: backend/hotelreservationsystem/deploy.zip
           wait_for_environment_recovery: 300
           
