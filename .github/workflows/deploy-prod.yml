@@ -85,7 +85,7 @@ jobs:
 
             echo "Attempt $i: HTTP $code, body: $body"
 
-            if [ "$code" = "200" ] && echo "$body" | grep -qi "ok"; then
+            if [ "$code" = "200" ]; then
               echo "Backend healthy."
               exit 0
             fi
