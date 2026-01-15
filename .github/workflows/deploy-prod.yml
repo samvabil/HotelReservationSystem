@@ -2,7 +2,7 @@ name: Deploy to Production (prod branch)
 
 on:
   push:
-    branches: ["prod"]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -67,15 +67,15 @@ jobs:
           region: ${{ secrets.AWS_REGION }}
           application_name: "Level-Up-Lounge"
           environment_name: "Level-Up-Lounge-env-1"
-          version_label: "prod-${{ github.sha }}"
+          version_label: "prod-${{ github.sha }}-${{ github.run_id }}"
           deployment_package: backend/hotelreservationsystem/deploy.zip
           wait_for_environment_recovery: 300
-
+          
       - name: Smoke test /api/health
         shell: bash
         run: |
           set -euo pipefail
-          URL="https://leveluplounge.us-east-1.elasticbeanstalk.com/api/health"
+          URL="https://d28qsoaj3pey5k.cloudfront.net/api/health"
           echo "Checking $URL"
 
           for i in {1..30}; do
