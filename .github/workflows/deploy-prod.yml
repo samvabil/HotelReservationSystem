@@ -1,0 +1,144 @@
+name: Deploy to Production (prod branch)
+
+on:
+  push:
+    branches: ["prod"]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend (Elastic Beanstalk)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend/hotelreservationsystem
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: "17"
+          cache: maven
+
+      - name: Build JAR (skip tests)
+        run: ./mvnw -B clean package -DskipTests
+
+      - name: Create deploy bundle (deploy.zip)
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f deploy.zip application.jar
+          cp target/*.jar application.jar
+
+          ZIP_ITEMS=("application.jar")
+
+          if [ -d ".platform" ]; then
+            ZIP_ITEMS+=(".platform")
+          fi
+
+          if [ -d ".ebextensions" ]; then
+            ZIP_ITEMS+=(".ebextensions")
+          fi
+
+          zip -r deploy.zip "${ZIP_ITEMS[@]}"
+
+          echo "Bundle contents:"
+          zipinfo -1 deploy.zip | egrep "application.jar|\.platform|\.ebextensions" || true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: ${{ secrets.AWS_REGION }}
+          application_name: "Level-Up-Lounge"
+          environment_name: "Level-Up-Lounge-env-1"
+          version_label: "prod-${{ github.sha }}"
+          deployment_package: backend/hotelreservationsystem/deploy.zip
+          wait_for_environment_recovery: 300
+
+      - name: Smoke test /api/health
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://leveluplounge.us-east-1.elasticbeanstalk.com/api/health"
+          echo "Checking $URL"
+
+          for i in {1..30}; do
+            code=$(curl -sS -o /tmp/health.txt -w "%{http_code}" "$URL" || true)
+            body=$(cat /tmp/health.txt || true)
+
+            echo "Attempt $i: HTTP $code, body: $body"
+
+            if [ "$code" = "200" ] && echo "$body" | grep -qi "ok"; then
+              echo "Backend healthy."
+              exit 0
+            fi
+
+            sleep 10
+          done
+
+          echo "Backend health check failed."
+          exit 1
+
+  deploy-frontend:
+    name: Deploy Frontend (S3 + CloudFront)
+    runs-on: ubuntu-latest
+    needs: deploy-backend
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Write production env for Vite
+        run: |
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" > .env
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Sync dist to S3
+        run: |
+          aws s3 sync dist s3://level-up-lounge-frontend --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id EVC5H34X9DHEJ \
+            --paths "/*"
+ 
