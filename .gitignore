@@ -25,3 +25,4 @@ replay_pid*
 
 .vscode/
 backend/hotelreservationsystem/src/main/resources/application-local.yml
+backend/hotelreservationsystem/.env
