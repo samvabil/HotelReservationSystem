@@ -75,7 +75,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          URL="https://leveluplounge.us-east-1.elasticbeanstalk.com/api/health"
+          URL="https://d28qsoaj3pey5k.cloudfront.net/api/health"
           echo "Checking $URL"
 
           for i in {1..30}; do
