@@ -23,17 +23,35 @@ import SmokingRoomsIcon from '@mui/icons-material/SmokingRooms';
 import HotTubIcon from '@mui/icons-material/HotTub';
 import { useNavigate } from 'react-router-dom';
 
-// 1. IMPORT THE REAL TYPE (Adjust path if needed)
 import { type Room } from '../types/Room';
 
+/**
+ * Props for the RoomSelectionModal component.
+ */
 interface RoomSelectionModalProps {
+  /** Whether the modal is open. */
   open: boolean;
+  /** Callback function invoked when the modal should be closed. */
   onClose: () => void;
+  /** The name of the room type being displayed. */
   roomTypeName: string;
+  /** The price per night for this room type. */
   price: number;
-  availableRooms: Room[]; // 2. Now this matches your API data exactly
+  /** List of available rooms of this type for the selected dates. */
+  availableRooms: Room[];
 }
 
+/**
+ * Modal component for selecting a specific room from available rooms.
+ * <p>
+ * Displays a list of available rooms for a selected room type and date range.
+ * Each room shows its room number and features (accessible, pet-friendly, smoking status, jacuzzi).
+ * Users can click "Book" on a specific room to proceed to checkout.
+ * </p>
+ *
+ * @param {RoomSelectionModalProps} props - Component props.
+ * @returns {JSX.Element} A Material-UI Dialog showing available rooms.
+ */
 export default function RoomSelectionModal({
   open,
   onClose,

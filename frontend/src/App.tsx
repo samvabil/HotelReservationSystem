@@ -20,8 +20,20 @@ import AdminRoomTypes from "./pages/AdminRoomTypes";
 import AdminRooms from "./pages/AdminRooms";
 import AccountPage from "./pages/AccountPage";
 
-
-
+/**
+ * Main application component.
+ * 
+ * This component sets up the application structure including:
+ * - Material-UI theme provider
+ * - Redux state synchronization for user and employee authentication
+ * - React Router for navigation
+ * - Loading state management during authentication checks
+ * 
+ * The app blocks rendering until both user and employee authentication
+ * statuses have been determined to prevent flash of unauthenticated content.
+ * 
+ * @returns {JSX.Element} The rendered application
+ */
 function App() {
   const dispatch = useDispatch();
   

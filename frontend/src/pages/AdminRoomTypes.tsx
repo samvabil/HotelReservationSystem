@@ -35,6 +35,9 @@ import {
   type RoomTypeUpsertBody,
 } from "../services/employeeRoomTypesAdminApi";
 
+/**
+ * Background style for admin pages.
+ */
 const bgStyle = {
   minHeight: "90vh",
   backgroundImage:
@@ -45,6 +48,11 @@ const bgStyle = {
   alignItems: "center",
 };
 
+/**
+ * Creates an empty room type form with default values.
+ *
+ * @returns {RoomTypeUpsertBody} An empty room type form object with default values.
+ */
 function emptyForm(): RoomTypeUpsertBody {
   return {
     name: "",
@@ -68,6 +76,26 @@ function emptyForm(): RoomTypeUpsertBody {
   };
 }
 
+/**
+ * Admin page for managing room types.
+ * <p>
+ * Allows administrators to create, edit, and delete room type definitions.
+ * Room types define the characteristics of rooms including:
+ * - Pricing, capacity, beds, and bedrooms
+ * - Amenities (jacuzzi, kitchen)
+ * - Gaming equipment (PC tier, PC count, consoles)
+ * - Images (uploaded to S3)
+ * </p>
+ * <p>
+ * Requires ROLE_ADMIN permission. Non-admin employees are shown an access denied message.
+ * </p>
+ * <p>
+ * Room type deletion is blocked if any rooms reference the type (enforced by backend).
+ * Image uploads occur after saving the room type and are stored in AWS S3.
+ * </p>
+ *
+ * @returns {JSX.Element} The admin room types management page.
+ */
 export default function AdminRoomTypes() {
   const navigate = useNavigate();
   const { employee, isEmployeeAuthenticated } = useSelector((s: RootState) => s.employeeAuth);

@@ -3,10 +3,17 @@ import { type RoomTypeSearchResult } from "../types/RoomTypeSearchResult";
 import { type BookingState } from "../store/bookingSlice";
 import type { Room } from "../types/Room";
 
+/**
+ * RTK Query API endpoints for room-related operations.
+ */
 export const roomApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    
-    // The Endpoint Definition
+    /**
+     * Searches for available rooms matching the specified criteria.
+     * 
+     * @param criteria - The search criteria including dates, filters, and gaming preferences
+     * @returns A list of room type search results with available rooms
+     */
     searchRooms: builder.query<RoomTypeSearchResult[], BookingState>({
       query: (criteria) => {
         const params = new URLSearchParams();
@@ -48,9 +55,13 @@ export const roomApi = apiSlice.injectEndpoints({
     }
   ),
 
-    // Future endpoints can go here (e.g., getRoomById)
-
-  getRoomById: builder.query<Room, string>({
+    /**
+     * Retrieves a specific room by its unique identifier.
+     * 
+     * @param id - The unique identifier of the room
+     * @returns The room details including room type information
+     */
+    getRoomById: builder.query<Room, string>({
       // 1. The URL matches your Controller (@GetMapping("/{id}"))
       query: (id) => `/rooms/${id}`,
       
@@ -62,5 +73,10 @@ export const roomApi = apiSlice.injectEndpoints({
   overrideExisting: false, // Prevents errors during hot-reloading
 });
 
-// Export the auto-generated hook
+/**
+ * Exported hooks for usage in functional components.
+ * 
+ * - useSearchRoomsQuery: Hook to search for available rooms
+ * - useGetRoomByIdQuery: Hook to fetch a room by ID
+ */
 export const { useSearchRoomsQuery, useGetRoomByIdQuery } = roomApi;

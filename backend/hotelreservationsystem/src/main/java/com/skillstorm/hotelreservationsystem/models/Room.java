@@ -24,9 +24,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Document(collection = "rooms")
 public class Room {
     
+    /**
+     * Default constructor for the Room class.
+     */
     public Room() {
     }
 
+    /**
+     * Constructs a new Room with the specified details.
+     *
+     * @param roomNumber The physical room number or identifier.
+     * @param roomTypeId The unique identifier of the room type.
+     * @param accessible Whether the room is accessible (ADA compliant).
+     * @param petFriendly Whether pets are allowed in the room.
+     * @param nonSmoking Whether the room is non-smoking.
+     * @param occupied Whether the room is currently occupied.
+     * @param unavailableDates List of date ranges when the room is unavailable.
+     */
     public Room(String roomNumber, String roomTypeId, boolean accessible, boolean petFriendly, boolean nonSmoking,
             boolean occupied, List<UnavailableDate> unavailableDates) {
         this.roomNumber = roomNumber;
@@ -51,13 +65,17 @@ public class Room {
     private String roomNumber;
 
 
+    /**
+     * The unique identifier of the room type.
+     * This is the MongoDB ObjectId of the RoomType document.
+     */
     @Field("roomTypeId") 
     @JsonIgnore 
     private String roomTypeId;
 
     /**
-     * The room type object
-     * 
+     * The RoomType object associated with this room.
+     * This is a transient field populated for frontend display.
      */
     @Transient
     private RoomType roomType;
@@ -292,11 +310,21 @@ public class Room {
     }
 
 
+    /**
+     * Gets the RoomType object associated with this room.
+     *
+     * @return The RoomType object, or null if not populated.
+     */
     @JsonProperty("roomTypeId")
     public RoomType getRoomType() {
         return roomType;
     }
 
+    /**
+     * Sets the RoomType object and synchronizes the roomTypeId field.
+     *
+     * @param roomType The RoomType object to associate with this room.
+     */
     public void setRoomType(RoomType roomType) {
         this.roomType = roomType;
         if (roomType != null) {
@@ -341,17 +369,18 @@ public class Room {
     }
 
     /**
-     * Gets the Room Type
+     * Gets the room type identifier.
      *
-     * @return The RoomType.
+     * @return The room type ID string.
      */
     public String getRoomTypeId() {
         return roomTypeId;
     }
 
     /**
-     * Sets the Room Type
-     * @param roomType
+     * Sets the room type identifier.
+     *
+     * @param roomTypeId The new room type ID.
      */
     public void setRoomTypeID(String roomTypeId) {
         this.roomTypeId = roomTypeId;

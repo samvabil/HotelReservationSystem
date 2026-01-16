@@ -24,22 +24,53 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
+/**
+ * REST controller for employee-related operations.
+ * <p>
+ * This controller handles HTTP requests related to employee account management,
+ * authentication sessions, and profile retrieval. Requires employee authentication.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @RestController
 @RequestMapping("/api/employees")
 public class EmployeeController {
 
     private final EmployeeAdminService employeeAdminService;
 
+    /**
+     * Constructs a new EmployeeController with the specified service.
+     *
+     * @param employeeAdminService The service for employee administration operations.
+     */
     public EmployeeController(EmployeeAdminService employeeAdminService) {
         this.employeeAdminService = employeeAdminService;
     }
 
+    /**
+     * Creates a new employee account.
+     * <p>
+     * This endpoint is restricted to admin users and creates a new employee
+     * with the specified credentials and roles.
+     * </p>
+     *
+     * @param req The employee creation request with validation constraints.
+     * @return The created employee response with HTTP 201 status.
+     */
     @PostMapping("/admin")
     @ResponseStatus(HttpStatus.CREATED)
     public EmployeeResponse createEmployee(@Valid @RequestBody CreateEmployeeRequest req) {
         return employeeAdminService.createEmployee(req);
     }
 
+    /**
+     * Retrieves the currently authenticated employee's profile information.
+     *
+     * @param employee The authenticated employee principal.
+     * @return The employee's profile information.
+     */
     @GetMapping("/me")
     public EmployeeResponse me(@AuthenticationPrincipal Employee employee) {
         return new EmployeeResponse(
@@ -54,7 +85,15 @@ public class EmployeeController {
     }
 
     /**
-     * If this endpoint is reached, Basic Auth succeeded. Spring will create a session and store SecurityContext automatically.
+     * Starts a session for an authenticated employee.
+     * <p>
+     * If this endpoint is reached, Basic Auth succeeded. This method creates a session
+     * and stores the SecurityContext for subsequent requests using cookie-based authentication.
+     * </p>
+     *
+     * @param request The HTTP servlet request.
+     * @param auth The authentication object from Basic Auth.
+     * @return A ResponseEntity with no content and HTTP 204 status if successful, or HTTP 401 if not authenticated.
      */
     @PostMapping("/session")
     public ResponseEntity<Void> startSession(HttpServletRequest request, Authentication auth) {
@@ -75,6 +114,13 @@ public class EmployeeController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * Logs out the currently authenticated employee by invalidating the session.
+     *
+     * @param request The HTTP servlet request.
+     * @param response The HTTP servlet response.
+     * @return A ResponseEntity with no content and HTTP 204 status.
+     */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession(false);

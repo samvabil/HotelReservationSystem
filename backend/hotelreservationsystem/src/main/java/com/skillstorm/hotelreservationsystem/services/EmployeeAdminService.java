@@ -11,17 +11,44 @@ import com.skillstorm.hotelreservationsystem.dto.EmployeeResponse;
 import com.skillstorm.hotelreservationsystem.models.Employee;
 import com.skillstorm.hotelreservationsystem.repositories.EmployeeRepository;
 
+/**
+ * Service class for employee administration operations.
+ * <p>
+ * This service handles business logic for creating and managing employee accounts,
+ * including password hashing and validation of unique identifiers.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @Service
 public class EmployeeAdminService {
 
     private final EmployeeRepository employeeRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Constructs a new EmployeeAdminService with the required dependencies.
+     *
+     * @param employeeRepository The repository for employee data access.
+     * @param passwordEncoder The password encoder for hashing passwords.
+     */
     public EmployeeAdminService(EmployeeRepository employeeRepository, PasswordEncoder passwordEncoder) {
         this.employeeRepository = employeeRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Creates a new employee account.
+     * <p>
+     * Validates that the email and employee ID are unique, hashes the password,
+     * normalizes role names (adding ROLE_ prefix if missing), and saves the employee.
+     * </p>
+     *
+     * @param req The employee creation request.
+     * @return The created employee response.
+     * @throws IllegalArgumentException if the email or employee ID already exists.
+     */
     public EmployeeResponse createEmployee(CreateEmployeeRequest req) {
 
         if (employeeRepository.existsByEmail(req.email())) {
@@ -51,6 +78,12 @@ public class EmployeeAdminService {
         return toResponse(saved);
     }
 
+    /**
+     * Converts an Employee entity to an EmployeeResponse DTO.
+     *
+     * @param e The Employee entity to convert.
+     * @return The EmployeeResponse DTO.
+     */
     private EmployeeResponse toResponse(Employee e) {
         return new EmployeeResponse(
                 e.getId(),

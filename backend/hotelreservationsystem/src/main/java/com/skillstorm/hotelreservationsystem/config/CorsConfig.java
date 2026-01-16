@@ -10,13 +10,34 @@ import org.springframework.web.filter.CorsFilter;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Configuration class for Cross-Origin Resource Sharing (CORS).
+ * <p>
+ * This configuration allows the frontend application to make requests to the backend API
+ * from a different origin. The allowed origins are configured via application properties.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @Configuration
 public class CorsConfig {
 
-    // Inject the value from application.yml
+    /**
+     * The allowed origins for CORS requests, injected from application.yml.
+     */
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
 
+    /**
+     * Creates and configures a CORS filter bean.
+     * <p>
+     * This filter allows credentials (cookies), configures allowed origins dynamically
+     * from application properties, and sets standard allowed headers and HTTP methods.
+     * </p>
+     *
+     * @return A configured CorsFilter bean.
+     */
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

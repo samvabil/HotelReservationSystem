@@ -6,9 +6,22 @@ import { useSearchRoomsQuery } from '../services/roomApi';
 import SearchRoomsBar from '../components/SearchRoomsBar';
 import RoomCard from '../components/RoomCard';
 import { useNavigate } from 'react-router-dom';
-import { clearBookingState } from '../store/bookingSlice'; // 1. Import Action
-import dayjs from 'dayjs'; // 2. Import Dayjs
+import { clearBookingState } from '../store/bookingSlice';
+import dayjs from 'dayjs';
 
+/**
+ * Room search and booking page.
+ * <p>
+ * Displays a search interface with filters for dates, guests, amenities, and gaming equipment.
+ * Shows available room types matching the search criteria and allows users to proceed to checkout.
+ * </p>
+ * <p>
+ * Automatically clears stale booking state (dates in the past) when the component loads.
+ * Requires check-in/check-out dates and guest count to enable booking.
+ * </p>
+ *
+ * @returns {JSX.Element} The room booking search page.
+ */
 export default function Book() {
   const navigate = useNavigate();
   const dispatch = useDispatch(); // 3. Init Dispatch

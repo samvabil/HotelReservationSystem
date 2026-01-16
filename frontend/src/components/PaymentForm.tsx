@@ -2,13 +2,29 @@ import { useState, type FormEvent } from 'react';
 import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 import { Button, Alert } from '@mui/material';
 
+/**
+ * Props for the PaymentForm component.
+ */
 interface PaymentFormProps {
+  /** The total cost to charge (in dollars). */
   totalCost: number;
+  /** The room ID (currently unused but kept for potential future use). */
   roomId: string;
-  // Define that onSuccess expects a string (the ID)
+  /** Callback function invoked when payment succeeds. Receives the Stripe payment intent ID. */
   onSuccess: (paymentIntentId: string) => void; 
 }
 
+/**
+ * Stripe payment form component for processing reservations.
+ * <p>
+ * Uses Stripe Elements to collect payment information and process payments.
+ * On successful payment, calls the onSuccess callback with the payment intent ID.
+ * The actual reservation creation/update is handled by the parent component (CheckoutPage).
+ * </p>
+ *
+ * @param {PaymentFormProps} props - Component props.
+ * @returns {JSX.Element} A form with Stripe payment elements and submit button.
+ */
 export default function PaymentForm({ totalCost, onSuccess }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();

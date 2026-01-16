@@ -13,15 +13,39 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * REST controller for payment processing operations.
+ * <p>
+ * This controller handles integration with Stripe payment processing,
+ * creating payment intents that can be used by the frontend to process payments.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @RestController
 @RequestMapping("/payments")
 public class PaymentController {
 
-    // Inject the key from application.yml
+    /**
+     * Constructs a new PaymentController and initializes the Stripe API key.
+     *
+     * @param secretKey The Stripe secret key injected from application configuration.
+     */
     public PaymentController(@Value("${stripe.key}") String secretKey) {
         Stripe.apiKey = secretKey;
     }
 
+    /**
+     * Creates a new Stripe payment intent for processing a payment.
+     * <p>
+     * This endpoint creates a payment intent on Stripe's servers and returns the
+     * client secret, which the frontend uses to complete the payment transaction.
+     * </p>
+     *
+     * @param paymentInfo The payment information including amount and currency.
+     * @return A ResponseEntity containing the client secret if successful, or HTTP 400 if an error occurs.
+     */
     @PostMapping("/create-intent")
     public ResponseEntity<Map<String, String>> createPaymentIntent(@RequestBody PaymentInfoRequest paymentInfo) {
         try {

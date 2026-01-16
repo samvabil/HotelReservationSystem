@@ -21,6 +21,18 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Reservation {
     
 
+    /**
+     * Constructs a new Reservation with the specified details.
+     *
+     * @param userId The unique identifier of the user making the reservation.
+     * @param roomId The unique identifier of the reserved room.
+     * @param checkIn The scheduled check-in date.
+     * @param checkOut The scheduled check-out date.
+     * @param guestCount The number of guests staying in the room.
+     * @param totalPrice The total cost of the reservation.
+     * @param status The current status of the reservation.
+     * @param paymentIntentId The Stripe payment intent identifier.
+     */
     public Reservation(String userId, String roomId, LocalDate checkIn, LocalDate checkOut, int guestCount, double totalPrice,
             ReservationStatus status, String paymentIntentId) {
         this.userId = userId;
@@ -52,7 +64,16 @@ public class Reservation {
     @Transient
     private Room room; 
 
+    /**
+     * The unique identifier of the user who made the reservation.
+     * This is the MongoDB ObjectId of the User document.
+     */
     private String userId;
+    
+    /**
+     * The unique identifier of the room being reserved.
+     * This is the MongoDB ObjectId of the Room document.
+     */
     private String roomId;
 
     /**
@@ -162,42 +183,195 @@ public class Reservation {
     /**
      * Single snapshot record for payment transaction details.
      * Status can be updated to REFUNDED and include refund info if needed.
+     * This nested class stores a complete record of a payment transaction for audit purposes.
      */
     public static class PaymentTransaction {
+        /**
+         * The payment provider name (e.g., "STRIPE").
+         */
         private String provider;       // "STRIPE"
+        
+        /**
+         * The unique transaction identifier from the payment provider.
+         * Typically uses the paymentIntentId as a stable identifier.
+         */
         private String transactionId;  // use paymentIntentId as stable id
+        
+        /**
+         * The transaction amount in cents.
+         */
         private long amountCents;
+        
+        /**
+         * The currency code (e.g., "usd").
+         */
         private String currency;       // "usd"
+        
+        /**
+         * The transaction status (e.g., "SUCCEEDED", "REFUNDED").
+         */
         private String status;         // "SUCCEEDED", "REFUNDED"
+        
+        /**
+         * The timestamp when the payment was processed.
+         */
         private Instant paidAt;
 
-        // Optional refund info, still within the "single record" approach
+        /**
+         * The refund identifier from the payment provider.
+         * Only populated if the transaction has been refunded.
+         */
         private String refundId;
+        
+        /**
+         * The timestamp when the refund was processed.
+         * Only populated if the transaction has been refunded.
+         */
         private Instant refundedAt;
 
-        public String getProvider() { return provider; }
-        public void setProvider(String provider) { this.provider = provider; }
+        /**
+         * Gets the payment provider name.
+         *
+         * @return The provider name.
+         */
+        public String getProvider() { 
+            return provider; 
+        }
+        
+        /**
+         * Sets the payment provider name.
+         *
+         * @param provider The provider name.
+         */
+        public void setProvider(String provider) { 
+            this.provider = provider; 
+        }
 
-        public String getTransactionId() { return transactionId; }
-        public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
+        /**
+         * Gets the transaction identifier.
+         *
+         * @return The transaction ID.
+         */
+        public String getTransactionId() { 
+            return transactionId; 
+        }
+        
+        /**
+         * Sets the transaction identifier.
+         *
+         * @param transactionId The transaction ID.
+         */
+        public void setTransactionId(String transactionId) { 
+            this.transactionId = transactionId; 
+        }
 
-        public long getAmountCents() { return amountCents; }
-        public void setAmountCents(long amountCents) { this.amountCents = amountCents; }
+        /**
+         * Gets the transaction amount in cents.
+         *
+         * @return The amount in cents.
+         */
+        public long getAmountCents() { 
+            return amountCents; 
+        }
+        
+        /**
+         * Sets the transaction amount in cents.
+         *
+         * @param amountCents The amount in cents.
+         */
+        public void setAmountCents(long amountCents) { 
+            this.amountCents = amountCents; 
+        }
 
-        public String getCurrency() { return currency; }
-        public void setCurrency(String currency) { this.currency = currency; }
+        /**
+         * Gets the currency code.
+         *
+         * @return The currency code.
+         */
+        public String getCurrency() { 
+            return currency; 
+        }
+        
+        /**
+         * Sets the currency code.
+         *
+         * @param currency The currency code.
+         */
+        public void setCurrency(String currency) { 
+            this.currency = currency; 
+        }
 
-        public String getStatus() { return status; }
-        public void setStatus(String status) { this.status = status; }
+        /**
+         * Gets the transaction status.
+         *
+         * @return The status string.
+         */
+        public String getStatus() { 
+            return status; 
+        }
+        
+        /**
+         * Sets the transaction status.
+         *
+         * @param status The status string.
+         */
+        public void setStatus(String status) { 
+            this.status = status; 
+        }
 
-        public Instant getPaidAt() { return paidAt; }
-        public void setPaidAt(Instant paidAt) { this.paidAt = paidAt; }
+        /**
+         * Gets the payment timestamp.
+         *
+         * @return The timestamp when payment was processed.
+         */
+        public Instant getPaidAt() { 
+            return paidAt; 
+        }
+        
+        /**
+         * Sets the payment timestamp.
+         *
+         * @param paidAt The timestamp when payment was processed.
+         */
+        public void setPaidAt(Instant paidAt) { 
+            this.paidAt = paidAt; 
+        }
 
-        public String getRefundId() { return refundId; }
-        public void setRefundId(String refundId) { this.refundId = refundId; }
+        /**
+         * Gets the refund identifier.
+         *
+         * @return The refund ID, or null if not refunded.
+         */
+        public String getRefundId() { 
+            return refundId; 
+        }
+        
+        /**
+         * Sets the refund identifier.
+         *
+         * @param refundId The refund ID.
+         */
+        public void setRefundId(String refundId) { 
+            this.refundId = refundId; 
+        }
 
-        public Instant getRefundedAt() { return refundedAt; }
-        public void setRefundedAt(Instant refundedAt) { this.refundedAt = refundedAt; }
+        /**
+         * Gets the refund timestamp.
+         *
+         * @return The timestamp when refund was processed, or null if not refunded.
+         */
+        public Instant getRefundedAt() { 
+            return refundedAt; 
+        }
+        
+        /**
+         * Sets the refund timestamp.
+         *
+         * @param refundedAt The timestamp when refund was processed.
+         */
+        public void setRefundedAt(Instant refundedAt) { 
+            this.refundedAt = refundedAt; 
+        }
     }
 
     // --- Overrides ---
@@ -313,22 +487,81 @@ public class Reservation {
         this.id = id;
     }
 
-    public User getUser() { return user; }
+    /**
+     * Gets the User object associated with this reservation.
+     * This is a transient field populated for frontend display.
+     *
+     * @return The User object, or null if not populated.
+     */
+    public User getUser() { 
+        return user; 
+    }
+    
+    /**
+     * Sets the User object and synchronizes the userId field.
+     *
+     * @param user The User object to associate with this reservation.
+     */
     public void setUser(User user) {
         this.user = user;
         if (user != null) this.userId = user.getId();
     }
 
-    public Room getRoom() { return room; }
+    /**
+     * Gets the Room object associated with this reservation.
+     * This is a transient field populated for frontend display.
+     *
+     * @return The Room object, or null if not populated.
+     */
+    public Room getRoom() { 
+        return room; 
+    }
+    
+    /**
+     * Sets the Room object and synchronizes the roomId field.
+     *
+     * @param room The Room object to associate with this reservation.
+     */
     public void setRoom(Room room) {
         this.room = room;
         if (room != null) this.roomId = room.getId();
     }
 
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
-    public String getRoomId() { return roomId; }
-    public void setRoomId(String roomId) { this.roomId = roomId; }
+    /**
+     * Gets the user ID string.
+     *
+     * @return The user ID.
+     */
+    public String getUserId() { 
+        return userId; 
+    }
+    
+    /**
+     * Sets the user ID string.
+     *
+     * @param userId The new user ID.
+     */
+    public void setUserId(String userId) { 
+        this.userId = userId; 
+    }
+    
+    /**
+     * Gets the room ID string.
+     *
+     * @return The room ID.
+     */
+    public String getRoomId() { 
+        return roomId; 
+    }
+    
+    /**
+     * Sets the room ID string.
+     *
+     * @param roomId The new room ID.
+     */
+    public void setRoomId(String roomId) { 
+        this.roomId = roomId; 
+    }
 
     /**
      * Gets the check-in date.

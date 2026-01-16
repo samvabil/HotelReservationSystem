@@ -1,5 +1,13 @@
 import { createTheme } from "@mui/material/styles";
 
+/**
+ * Material-UI theme configuration for the hotel reservation application.
+ * 
+ * This theme uses a dark mode design with neon purple and cyan accents
+ * to create a "gamer" aesthetic suitable for a gaming hotel. The theme
+ * includes custom styling for buttons, app bars, and typography to
+ * achieve a cyberpunk/tech sci-fi visual style.
+ */
 export const theme = createTheme({
   palette: {
     mode: 'dark', // Default to dark mode for that "gamer" aesthetic

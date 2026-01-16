@@ -23,20 +23,21 @@ public class RoomType {
     }
 
     /**
-     * 
-     * @param name
-     * @param pricePerNight
-     * @param numBeds
-     * @param typeBed
-     * @param numBedroom
-     * @param squareFeet
-     * @param capacity
-     * @param hasJacuzzi
-     * @param hasKitchen
-     * @param levelOfPc
-     * @param numPcs
-     * @param consoles
-     * @param images
+     * Constructs a new RoomType with all specification details.
+     *
+     * @param name The display name of the room type.
+     * @param pricePerNight The base cost per night.
+     * @param numBeds The number of beds in the room.
+     * @param typeBed The size or type of beds (e.g., "King", "Queen").
+     * @param numBedroom The number of separate bedrooms.
+     * @param squareFeet The total area in square feet.
+     * @param capacity The maximum number of guests allowed.
+     * @param hasJacuzzi Whether the room includes a jacuzzi.
+     * @param hasKitchen Whether the room includes a kitchen.
+     * @param levelOfPc The performance tier of gaming PCs (1-3).
+     * @param numPcs The number of gaming PC setups.
+     * @param consoles The list of gaming consoles available.
+     * @param images The list of image URLs for the room.
      */
     public RoomType(String name, double pricePerNight, int numBeds, String typeBed, int numBedroom, int squareFeet,
             int capacity, boolean hasJacuzzi, boolean hasKitchen, int levelOfPc, int numPcs, List<String> consoles,

@@ -21,9 +21,30 @@ import { useCreatePaymentIntentMutation } from '../services/paymentApi';
 import { useCreateReservationMutation, useUpdateReservationMutation } from '../services/reservationApi'; 
 import PaymentForm from '../components/PaymentForm';
 
-// Replace with your actual Publishable Key
+/**
+ * Stripe publishable key for payment processing.
+ * Replace with your actual publishable key from Stripe.
+ */
 const stripePromise = loadStripe('pk_test_51Smfl3AXOOCAN7uB0saULNPwwO2HqxyRi0wAWeYqoeoQ1Tsyn1cLAXJBhCSPTlqRkTFgbeqyp3Us64NllGtYmhwT00Bo0ZaLY8');
 
+/**
+ * Checkout page for completing reservations.
+ * <p>
+ * Displays order summary with room details, dates, and pricing (including taxes).
+ * Integrates Stripe payment form for processing payments.
+ * </p>
+ * <p>
+ * Supports both new reservations and reservation modifications:
+ * - New reservations: Creates a new reservation after payment
+ * - Modifications: Updates an existing reservation (may require additional payment or refund)
+ * </p>
+ * <p>
+ * After successful payment, shows a success modal with options to return home or view account.
+ * Redirects to home if booking dates are not set in Redux state.
+ * </p>
+ *
+ * @returns {JSX.Element} The checkout page component.
+ */
 export default function CheckoutPage() {
   const { roomId } = useParams(); 
   const navigate = useNavigate();

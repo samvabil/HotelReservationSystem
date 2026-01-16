@@ -20,6 +20,27 @@ import EditIcon from '@mui/icons-material/Edit';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'; 
 import dayjs from 'dayjs';
 
+/**
+ * User account page for managing reservations.
+ * <p>
+ * Displays the authenticated user's reservations with filtering options (All, Current, Past, Canceled).
+ * Allows users to:
+ * - View all reservations with status indicators
+ * - Edit reservations (dates, guests, room type)
+ * - Cancel reservations (with refund eligibility notice)
+ * </p>
+ * <p>
+ * Edit functionality handles price differences:
+ * - Upgrades (price increase): Redirects to checkout for additional payment
+ * - Downgrades/refunds (price decrease): Processes refund automatically
+ * - No change: Updates immediately
+ * </p>
+ * <p>
+ * Reservations are sorted by status priority (upcoming > completed > refunded > canceled) and then by date.
+ * </p>
+ *
+ * @returns {JSX.Element} The user account management page.
+ */
 export default function AccountPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();

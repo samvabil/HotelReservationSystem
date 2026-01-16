@@ -13,10 +13,32 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * Security configuration for employee authentication and authorization.
+ * <p>
+ * This configuration uses Order(1) to have higher priority than UserSecurityConfig.
+ * It handles security for all endpoints under "/api/employees/**" using Basic Authentication
+ * and session-based authentication with CSRF protection.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @Configuration
 @Order(1)
 public class EmployeeSecurityConfig {
 
+    /**
+     * Defines the security filter chain for employee endpoints.
+     * <p>
+     * Configures Basic Authentication, CSRF protection, session management,
+     * and role-based access control for employee and admin operations.
+     * </p>
+     *
+     * @param http The HttpSecurity builder.
+     * @return The built SecurityFilterChain for employee endpoints.
+     * @throws Exception If an error occurs during configuration.
+     */
     @Bean
     public SecurityFilterChain employeeFilterChain(HttpSecurity http) throws Exception {
 

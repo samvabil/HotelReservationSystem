@@ -16,17 +16,43 @@ import com.skillstorm.hotelreservationsystem.models.RoomType;
 import com.skillstorm.hotelreservationsystem.repositories.RoomRepository;
 import com.skillstorm.hotelreservationsystem.repositories.RoomTypeRepository;
 
+/**
+ * Service class for employee room administration operations.
+ * <p>
+ * This service handles CRUD operations for managing physical rooms in the hotel,
+ * including filtering, validation, and populating room type information.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @Service
 public class RoomAdminService {
 
     private final RoomRepository roomRepository;
     private final RoomTypeRepository roomTypeRepository;
 
+    /**
+     * Constructs a new RoomAdminService with the required repositories.
+     *
+     * @param roomRepository The repository for room data access.
+     * @param roomTypeRepository The repository for room type data access.
+     */
     public RoomAdminService(RoomRepository roomRepository, RoomTypeRepository roomTypeRepository) {
         this.roomRepository = roomRepository;
         this.roomTypeRepository = roomTypeRepository;
     }
 
+    /**
+     * Lists all rooms with optional filtering criteria.
+     *
+     * @param roomTypeId Filter by room type ID (optional).
+     * @param accessible Filter by accessibility status (optional).
+     * @param petFriendly Filter by pet-friendly status (optional).
+     * @param nonSmoking Filter by non-smoking status (optional).
+     * @param occupied Filter by occupancy status (optional).
+     * @return A list of rooms matching the criteria with populated room types.
+     */
     public List<Room> listRooms(String roomTypeId, Boolean accessible, Boolean petFriendly, Boolean nonSmoking, Boolean occupied) {
         List<Room> rooms = roomRepository.findAll();
 
@@ -42,6 +68,13 @@ public class RoomAdminService {
         return rooms;
     }
 
+    /**
+     * Retrieves a room by its unique identifier.
+     *
+     * @param id The unique identifier of the room.
+     * @return The room with populated room type information.
+     * @throws ResponseStatusException if the room is not found.
+     */
     public Room getRoom(String id) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found: " + id));
@@ -49,6 +82,13 @@ public class RoomAdminService {
         return room;
     }
 
+    /**
+     * Creates a new room.
+     *
+     * @param req The room details to create.
+     * @return The created room with populated room type information.
+     * @throws ResponseStatusException if the room number already exists or the room type is not found.
+     */
     public Room createRoom(RoomUpsertRequest req) {
         if (roomRepository.existsByRoomNumber(req.roomNumber())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Room number already exists: " + req.roomNumber());
@@ -71,6 +111,14 @@ public class RoomAdminService {
         return saved;
     }
 
+    /**
+     * Updates an existing room.
+     *
+     * @param id The unique identifier of the room to update.
+     * @param req The updated room details (nullable fields allow selective updates).
+     * @return The updated room with populated room type information.
+     * @throws ResponseStatusException if the room is not found, room number conflicts, or room type is invalid.
+     */
     public Room updateRoom(String id, RoomUpsertRequest req) {
         Room existing = roomRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found: " + id));
@@ -99,6 +147,15 @@ public class RoomAdminService {
         return saved;
     }
 
+    /**
+     * Deletes a room by its ID.
+     * <p>
+     * Prevents deletion of occupied rooms to maintain data integrity.
+     * </p>
+     *
+     * @param id The unique identifier of the room to delete.
+     * @throws ResponseStatusException if the room is not found or is currently occupied.
+     */
     public void deleteRoom(String id) {
         Room existing = roomRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Room not found: " + id));
@@ -110,6 +167,11 @@ public class RoomAdminService {
         roomRepository.deleteById(id);
     }
 
+    /**
+     * Populates room type information for a list of rooms.
+     *
+     * @param rooms The list of rooms to hydrate with room type data.
+     */
     private void hydrateRoomTypes(List<Room> rooms) {
         Set<String> typeIds = rooms.stream()
                 .map(Room::getRoomTypeId)

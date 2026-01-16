@@ -37,6 +37,9 @@ import {
 import { useGetAdminRoomTypesQuery } from "../services/employeeRoomTypesAdminApi";
 import type { Room } from "../types/Room";
 
+/**
+ * Background style for admin pages.
+ */
 const bgStyle = {
   minHeight: "90vh",
   backgroundImage:
@@ -58,6 +61,22 @@ function emptyRoomForm(roomTypes: { id: string }[]): RoomUpsertBody {
   };
 }
 
+/**
+ * Admin page for managing rooms.
+ * <p>
+ * Allows administrators to create, edit, and delete individual rooms.
+ * Each room must be assigned to a room type and can have flags for accessibility,
+ * pet-friendliness, smoking status, and occupancy.
+ * </p>
+ * <p>
+ * Requires ROLE_ADMIN permission. Non-admin employees are shown an access denied message.
+ * </p>
+ * <p>
+ * Room deletion is blocked if the room is currently marked as occupied (enforced by backend).
+ * </p>
+ *
+ * @returns {JSX.Element} The admin rooms management page.
+ */
 export default function AdminRooms() {
   const navigate = useNavigate();
   const { employee, isEmployeeAuthenticated } = useSelector((s: RootState) => s.employeeAuth);

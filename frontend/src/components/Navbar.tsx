@@ -15,9 +15,26 @@ import { useLogoutEmployeeMutation } from '../services/employeeAuthApi';
 
 import BadgeIcon from "@mui/icons-material/Badge";
 
-// MAKE SURE THIS PORT MATCHES YOUR SPRING BOOT SERVER
+/**
+ * The base URL for the Spring Boot backend API.
+ * Reads from environment variable VITE_API_URL.
+ */
 const SPRING_BOOT_URL = import.meta.env.VITE_API_URL;
 
+/**
+ * Main navigation bar component for the application.
+ * <p>
+ * Provides navigation links based on authentication state:
+ * - Guests: Sign in options (Google OAuth or Employee login)
+ * - Authenticated Users: Book A Room, My Reservations, Profile menu
+ * - Authenticated Employees: Manage Reservations, Manage Rooms, Manage Room Types, Profile menu
+ * </p>
+ * <p>
+ * Handles both user (OAuth) and employee authentication with separate logout flows.
+ * </p>
+ *
+ * @returns {JSX.Element} The navigation bar component.
+ */
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();

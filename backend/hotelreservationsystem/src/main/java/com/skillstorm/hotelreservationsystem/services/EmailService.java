@@ -7,11 +7,30 @@ import org.springframework.stereotype.Service;
 
 import com.skillstorm.hotelreservationsystem.models.Reservation;
 
+/**
+ * Service class for sending email notifications.
+ * <p>
+ * This service handles sending various types of email notifications to users,
+ * including reservation confirmations, cancellations, and updates.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @Service
 public class EmailService {
+    /**
+     * The JavaMailSender for sending emails.
+     */
     @Autowired
     private JavaMailSender mailSender;
 
+    /**
+     * Sends a reservation confirmation email to the user.
+     *
+     * @param toEmail The recipient's email address.
+     * @param reservation The reservation details to include in the email.
+     */
     public void sendReservationConfirmation(String toEmail, Reservation reservation) {
         SimpleMailMessage message = new SimpleMailMessage();
         
@@ -57,6 +76,16 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    /**
+     * Sends a cancellation confirmation email to the user.
+     * <p>
+     * The email content varies based on whether the reservation was refunded
+     * or cancelled without refund (e.g., within 72 hours of check-in).
+     * </p>
+     *
+     * @param toEmail The recipient's email address.
+     * @param reservation The cancelled reservation details.
+     */
     public void sendCancellationConfirmation(String toEmail, Reservation reservation) {
         SimpleMailMessage message = new SimpleMailMessage();
         
@@ -107,6 +136,12 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    /**
+     * Sends an update confirmation email when a reservation is modified.
+     *
+     * @param toEmail The recipient's email address.
+     * @param reservation The updated reservation details.
+     */
     public void sendUpdateConfirmation(String toEmail, Reservation reservation) {
         SimpleMailMessage message = new SimpleMailMessage();
         
@@ -151,6 +186,12 @@ public class EmailService {
         System.out.println("Update email sent to " + toEmail);
     }
 
+    /**
+     * Sends a thank-you email when a reservation status is updated to COMPLETED.
+     *
+     * @param toEmail The recipient's email address.
+     * @param reservation The completed reservation details.
+     */
     public void sendStayCompletedEmail(String toEmail, Reservation reservation) {
         SimpleMailMessage message = new SimpleMailMessage();
         

@@ -1,7 +1,13 @@
 import { apiSlice } from '../store/apiSlice';
 
+/**
+ * RTK Query API endpoints for reservation operations.
+ */
 export const reservationApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
+    /**
+     * Creates a new reservation for the authenticated user.
+     */
     createReservation: builder.mutation({
       query: (body) => ({
         url: '/reservations', // Matches the Controller
@@ -11,13 +17,17 @@ export const reservationApi = apiSlice.injectEndpoints({
       // Invalidate the 'Room' tag so the calendar refreshes immediately!
       invalidatesTags: ['Reservation', 'Room'], 
     }),
-    // 1. Get My Reservations
+    /**
+     * Retrieves all reservations for the currently authenticated user.
+     */
     getMyReservations: builder.query({
       query: () => '/reservations/my-reservations',
       providesTags: ['Reservation'],
     }),
 
-    // 2. Cancel
+    /**
+     * Cancels a reservation by its ID.
+     */
     cancelReservation: builder.mutation({
       query: (id) => ({
         url: `/reservations/${id}`,
@@ -26,7 +36,9 @@ export const reservationApi = apiSlice.injectEndpoints({
       invalidatesTags: ['Reservation', 'Room'], // Refreshes the list immediately
     }),
 
-    // 3. Update
+    /**
+     * Updates an existing reservation with new details.
+     */
     updateReservation: builder.mutation({
       query: ({ id, ...body }) => ({
         url: `/reservations/${id}`,
@@ -38,6 +50,14 @@ export const reservationApi = apiSlice.injectEndpoints({
   }),
 });
 
+/**
+ * Exported hooks for usage in functional components.
+ * 
+ * - useCreateReservationMutation: Hook to create a new reservation
+ * - useGetMyReservationsQuery: Hook to fetch user's reservations
+ * - useCancelReservationMutation: Hook to cancel a reservation
+ * - useUpdateReservationMutation: Hook to update a reservation
+ */
 export const { 
     useCreateReservationMutation,
     useGetMyReservationsQuery, 

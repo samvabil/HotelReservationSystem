@@ -46,11 +46,23 @@ import {
 import { useGetAdminRoomTypesQuery } from "../services/employeeRoomTypesAdminApi";
 import type { Reservation, ReservationStatus } from "../types/Reservation";
 
+/**
+ * Converts cents to dollars and formats as USD currency string.
+ *
+ * @param {number} cents - The amount in cents.
+ * @returns {string} The formatted currency string (e.g., "$1,234.56").
+ */
 function centsToDollars(cents: number) {
   const dollars = cents / 100;
   return dollars.toLocaleString(undefined, { style: "currency", currency: "USD" });
 }
 
+/**
+ * Returns the Material-UI color name for a reservation status.
+ *
+ * @param {ReservationStatus} status - The reservation status.
+ * @returns {string} The color name for the status chip.
+ */
 function statusColor(status: ReservationStatus) {
   switch (status) {
     case "CONFIRMED":
@@ -68,14 +80,41 @@ function statusColor(status: ReservationStatus) {
   }
 }
 
+/**
+ * Formats a status string by converting snake_case to Title Case.
+ *
+ * @param {string} s - The status string (e.g., "CHECKED_IN").
+ * @returns {string} The formatted status (e.g., "Checked In").
+ */
 function prettyStatus(s: string) {
   return s
     .toLowerCase()
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+    .join(" ")  ;
 }
 
+/**
+ * Employee reservations management page.
+ * <p>
+ * Provides comprehensive reservation management for employees including:
+ * - Search and filter reservations by guest email, room type, status, check-in status, and date range
+ * - Paginated table view of reservations with sorting
+ * - Edit reservations (dates, room, guest count)
+ * - Cancel reservations
+ * - Check-in and check-out guests
+ * - Revenue reporting with monthly breakdown
+ * </p>
+ * <p>
+ * Actions are contextual based on reservation status:
+ * - Edit: Only for CONFIRMED reservations
+ * - Cancel: Only for CONFIRMED reservations
+ * - Check-in: Only for CONFIRMED reservations
+ * - Check-out: Only for CHECKED_IN reservations
+ * </p>
+ *
+ * @returns {JSX.Element} The employee reservations management page.
+ */
 export default function EmployeeReservations() {
   // Filters
   const [guestEmail, setGuestEmail] = useState("");

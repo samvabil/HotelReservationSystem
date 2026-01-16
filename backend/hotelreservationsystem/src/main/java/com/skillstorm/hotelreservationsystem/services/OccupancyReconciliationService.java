@@ -14,17 +14,44 @@ import com.skillstorm.hotelreservationsystem.models.Room;
 import com.skillstorm.hotelreservationsystem.repositories.ReservationRepository;
 import com.skillstorm.hotelreservationsystem.repositories.RoomRepository;
 
+/**
+ * Service class for scheduled room occupancy reconciliation tasks.
+ * <p>
+ * This service runs scheduled jobs to ensure room occupancy status accurately
+ * reflects active checked-in reservations, preventing data inconsistencies.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @Service
 public class OccupancyReconciliationService {
 
     private final ReservationRepository reservationRepository;
     private final RoomRepository roomRepository;
 
+    /**
+     * Constructs a new OccupancyReconciliationService with the required repositories.
+     *
+     * @param reservationRepository The repository for reservation data access.
+     * @param roomRepository The repository for room data access.
+     */
     public OccupancyReconciliationService(ReservationRepository reservationRepository, RoomRepository roomRepository) {
         this.reservationRepository = reservationRepository;
         this.roomRepository = roomRepository;
     }
 
+    /**
+     * Scheduled task that runs daily at 3:00 AM to reconcile room occupancy status.
+     * <p>
+     * Ensures that rooms with active CHECKED_IN reservations (where today is within
+     * the stay period) are marked as occupied, and rooms without such reservations
+     * are marked as unoccupied.
+     * </p>
+     * <p>
+     * Cron expression: "0 0 3 * * ?" = Every day at 3:00 AM.
+     * </p>
+     */
     @Scheduled(cron = "0 0 3 * * ?")
     @Transactional
     public void reconcileOccupiedRooms() {

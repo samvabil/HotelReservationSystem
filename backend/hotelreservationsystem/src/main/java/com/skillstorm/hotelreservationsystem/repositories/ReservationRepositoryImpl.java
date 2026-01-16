@@ -14,15 +14,34 @@ import org.springframework.stereotype.Repository;
 
 import com.skillstorm.hotelreservationsystem.models.Reservation;
 
+/**
+ * Implementation of the custom reservation repository interface.
+ * <p>
+ * This class provides the implementation for complex MongoDB queries that cannot be
+ * expressed using Spring Data's method name conventions. It uses MongoTemplate
+ * to construct and execute custom queries.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @Repository
 public class ReservationRepositoryImpl implements ReservationRepositoryCustom {
 
     private final MongoTemplate mongoTemplate;
 
+    /**
+     * Constructs a new ReservationRepositoryImpl with the specified MongoTemplate.
+     *
+     * @param mongoTemplate The MongoTemplate for executing MongoDB queries.
+     */
     public ReservationRepositoryImpl(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Page<Reservation> adminSearch(
             String reservationId,

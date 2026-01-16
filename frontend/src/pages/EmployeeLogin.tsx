@@ -14,6 +14,19 @@ import { useNavigate } from "react-router-dom";
 import { setEmployee } from "../store/employeeAuthSlice";
 import { useStartEmployeeSessionMutation, useLazyGetEmployeeMeQuery } from "../services/employeeAuthApi";
 
+/**
+ * Employee login page for staff authentication.
+ * <p>
+ * Provides a form for employees to log in with email and password.
+ * After successful authentication, fetches employee details and updates Redux state.
+ * Redirects to the stored redirect path (from RequireEmployeeAuth) or to the reservations page.
+ * </p>
+ * <p>
+ * Displays appropriate error messages for authentication failures (401, 403, or connection issues).
+ * </p>
+ *
+ * @returns {JSX.Element} The employee login page.
+ */
 export default function EmployeeLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

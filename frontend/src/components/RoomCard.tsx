@@ -9,12 +9,35 @@ import ComputerIcon from '@mui/icons-material/Computer';
 import SquareFootIcon from '@mui/icons-material/SquareFoot';
 import { type RoomType } from '../types/RoomType';
 
+/**
+ * Props for the RoomCard component.
+ */
 interface RoomCardProps {
+  /** The room type data to display. */
   roomType: RoomType;
+  /** Callback function invoked when the "Book a stay!" button is clicked. Receives the roomTypeId. */
   onBook: (roomTypeId: string) => void;
-  disabled?: boolean; // <--- NEW PROP
+  /** Whether the booking button should be disabled (e.g., when dates are not selected). */
+  disabled?: boolean;
 }
 
+/**
+ * Card component for displaying room type information.
+ * <p>
+ * Displays room details including:
+ * - Main image
+ * - Room name, capacity, beds, and bedrooms
+ * - Price per night
+ * - Square footage, amenities (jacuzzi, kitchen)
+ * - Gaming equipment (PCs and consoles)
+ * </p>
+ * <p>
+ * Includes a "Book a stay!" button that can be disabled based on props.
+ * </p>
+ *
+ * @param {RoomCardProps} props - Component props.
+ * @returns {JSX.Element} A Material-UI Card displaying room type information.
+ */
 export default function RoomCard({ roomType, onBook, disabled = false }: RoomCardProps) {
   const mainImage = roomType.images && roomType.images.length > 0 
     ? roomType.images[0] 

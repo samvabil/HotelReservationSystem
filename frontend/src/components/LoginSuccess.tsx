@@ -5,6 +5,17 @@ import { setUser } from '../store/userAuthSlice';
 import { Box, CircularProgress } from '@mui/material';
 import { useGetCurrentUserQuery } from '../services/userAuthApi'; 
 
+/**
+ * Component displayed after successful OAuth login.
+ * <p>
+ * Fetches the current user's data from the API and updates Redux state.
+ * Redirects the user to the path stored in sessionStorage (from RequireAuth)
+ * or to the home page if no redirect path exists.
+ * Shows a loading spinner during the authentication process.
+ * </p>
+ *
+ * @returns {JSX.Element} A loading spinner while processing login.
+ */
 const LoginSuccess = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();

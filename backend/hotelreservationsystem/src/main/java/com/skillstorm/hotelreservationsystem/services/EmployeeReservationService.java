@@ -29,6 +29,17 @@ import com.skillstorm.hotelreservationsystem.repositories.RoomRepository;
 import com.skillstorm.hotelreservationsystem.repositories.RoomTypeRepository;
 import com.skillstorm.hotelreservationsystem.repositories.UserRepository;
 
+/**
+ * Service class for employee reservation management operations.
+ * <p>
+ * This service provides enhanced reservation management capabilities for employees,
+ * including search with filters, updates with employee override privileges, check-in/check-out,
+ * and revenue reporting. Employee operations can waive payment requirements for upgrades.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @Service
 public class EmployeeReservationService {
 
@@ -37,8 +48,18 @@ public class EmployeeReservationService {
     private final RoomTypeRepository roomTypeRepository;
     private final UserRepository userRepository;
 
+    /** Reuses reservation service for cancel logic and guest update operations. */
     private final ReservationService reservationService; // reuse cancel logic and guest update if desired
 
+    /**
+     * Constructs a new EmployeeReservationService with the required repositories and services.
+     *
+     * @param reservationRepository The repository for reservation data access.
+     * @param roomRepository The repository for room data access.
+     * @param roomTypeRepository The repository for room type data access.
+     * @param userRepository The repository for user data access.
+     * @param reservationService The reservation service for shared logic.
+     */
     public EmployeeReservationService(
             ReservationRepository reservationRepository,
             RoomRepository roomRepository,
@@ -53,6 +74,24 @@ public class EmployeeReservationService {
         this.reservationService = reservationService;
     }
 
+    /**
+     * Searches for reservations with multiple filter criteria and pagination.
+     * <p>
+     * Supports filtering by reservation ID, guest email, room type, status, check-in state,
+     * and date ranges. Converts email to user ID and room type to room IDs for the search.
+     * </p>
+     *
+     * @param reservationId The unique identifier of the reservation to search for.
+     * @param guestEmail The email address of the guest to filter by.
+     * @param roomTypeId The room type ID to filter by.
+     * @param status The reservation status to filter by.
+     * @param currentlyCheckedIn Whether to filter by check-in status.
+     * @param from The start date for date range filtering.
+     * @param to The end date for date range filtering.
+     * @param pageable Pagination information.
+     * @return A page of reservations matching the search criteria with hydrated user and room data.
+     * @throws ResponseStatusException if the guest email is not found.
+     */
     public Page<Reservation> search(
             String reservationId,
             String guestEmail,
@@ -93,6 +132,18 @@ public class EmployeeReservationService {
         return page;
     }
 
+    /**
+     * Updates a reservation with employee override privileges.
+     * <p>
+     * Employee updates can waive payment requirements for upgrades. This method
+     * prevents editing checked-in, cancelled, refunded, or completed reservations.
+     * </p>
+     *
+     * @param reservationId The unique identifier of the reservation to update.
+     * @param request The updated reservation details.
+     * @return The updated reservation with hydrated user and room data.
+     * @throws ResponseStatusException if the reservation is not found or in an invalid state.
+     */
     @Transactional
     public Reservation employeeUpdateReservation(String reservationId, ReservationRequest request) {
         Reservation existing = reservationRepository.findById(reservationId)
@@ -116,6 +167,15 @@ public class EmployeeReservationService {
         return updated;
     }
 
+    /**
+     * Cancels a reservation with employee override privileges.
+     * <p>
+     * Prevents cancelling reservations that are currently checked in.
+     * </p>
+     *
+     * @param reservationId The unique identifier of the reservation to cancel.
+     * @throws ResponseStatusException if the reservation is not found or is checked in.
+     */
     @Transactional
     public void employeeCancelReservation(String reservationId) {
         Reservation existing = reservationRepository.findById(reservationId)
@@ -128,6 +188,18 @@ public class EmployeeReservationService {
         reservationService.cancelReservation(reservationId);
     }
 
+    /**
+     * Checks in a guest for a reservation.
+     * <p>
+     * Validates that the reservation is CONFIRMED, the current date is within
+     * the check-in/check-out window, and the room is not already occupied.
+     * Marks the room as occupied and updates the reservation status.
+     * </p>
+     *
+     * @param reservationId The unique identifier of the reservation.
+     * @return The updated reservation with CHECKED_IN status.
+     * @throws ResponseStatusException if validation fails or the reservation/room is not found.
+     */
     @Transactional
     public Reservation checkIn(String reservationId) {
         Reservation r = reservationRepository.findById(reservationId)
@@ -174,6 +246,16 @@ public class EmployeeReservationService {
         return saved;
     }
 
+    /**
+     * Checks out a guest from a reservation.
+     * <p>
+     * Marks the room as unoccupied and updates the reservation status to COMPLETED.
+     * </p>
+     *
+     * @param reservationId The unique identifier of the reservation.
+     * @return The updated reservation with COMPLETED status.
+     * @throws ResponseStatusException if the reservation is not CHECKED_IN or not found.
+     */
     @Transactional
     public Reservation checkOut(String reservationId) {
         Reservation r = reservationRepository.findById(reservationId)
@@ -197,9 +279,15 @@ public class EmployeeReservationService {
     }
 
     /**
-     * Revenue report:
-     * sum(PAID and status in CONFIRMED/CHECKED_IN/COMPLETED) minus sum(REFUNDED)
-     * Uses transaction.amountCents.
+     * Generates a revenue report for the specified date range.
+     * <p>
+     * Calculates revenue as: sum of PAID transactions (for CONFIRMED/CHECKED_IN/COMPLETED reservations)
+     * minus sum of REFUNDED transactions. Uses transaction.amountCents for accuracy.
+     * </p>
+     *
+     * @param from The start date for the report (optional, null for all time).
+     * @param to The end date for the report (optional, null for all time).
+     * @return A revenue report with total and monthly breakdowns.
      */
     public RevenueReportResponse revenue(LocalDate from, LocalDate to) {
         List<Reservation> all = reservationRepository.findAll();
@@ -245,6 +333,15 @@ public class EmployeeReservationService {
         return new RevenueReportResponse(total, byMonth);
     }
 
+    /**
+     * Populates transient User and Room objects for a list of reservations.
+     * <p>
+     * This method fetches user and room data from repositories and attaches
+     * them to reservations for frontend display purposes.
+     * </p>
+     *
+     * @param reservations The list of reservations to hydrate.
+     */
     private void hydrate(List<Reservation> reservations) {
         if (reservations == null || reservations.isEmpty()) return;
 

@@ -3,27 +3,91 @@ package com.skillstorm.hotelreservationsystem.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Data Transfer Object for room search requests.
+ * <p>
+ * This DTO encapsulates all search criteria that can be used to filter available rooms,
+ * including date ranges, pricing, amenities, and gaming equipment specifications.
+ * All filter fields are optional to allow flexible searching.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 public class BookingSearchRequest {
+    /**
+     * The desired check-in date for the reservation.
+     */
     private LocalDate checkInDate;
+    
+    /**
+     * The desired check-out date for the reservation.
+     */
     private LocalDate checkOutDate;
+    
+    /**
+     * The number of guests that will be staying.
+     */
     private Integer guestCount;
     
-    // Room Filters (Nullable to allow "Don't Care")
+    /**
+     * The minimum price per night to filter by (nullable).
+     */
     private Double minPrice;
+    
+    /**
+     * The maximum price per night to filter by (nullable).
+     */
     private Double maxPrice;
+    
+    /**
+     * The room type name to filter by (e.g., "Suite").
+     */
     private String roomType; // e.g., "Suite"
+    
+    /**
+     * The minimum number of beds required (nullable).
+     */
     private Integer minBeds;
+    
+    /**
+     * The minimum number of bedrooms required (nullable).
+     */
     private Integer minBedrooms;
 
-    // Amenities
+    /**
+     * Whether the room must be accessible (ADA compliant) (nullable).
+     */
     private Boolean accessible;
+    
+    /**
+     * Whether the room must allow pets (nullable).
+     */
     private Boolean petFriendly;
+    
+    /**
+     * Whether the room must be non-smoking (nullable).
+     */
     private Boolean nonSmoking;
+    
+    /**
+     * Whether the room must have a jacuzzi (nullable).
+     */
     private Boolean hasJacuzzi;
 
-    // Gaming
+    /**
+     * The required number of gaming PCs in the room (nullable).
+     */
     private Integer pcCount;
+    
+    /**
+     * The required performance tier of gaming PCs (nullable).
+     */
     private String pcTier;
+    
+    /**
+     * The list of required gaming consoles (nullable).
+     */
     private List<String> consoles;
 
 

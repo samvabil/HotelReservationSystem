@@ -10,19 +10,40 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
 
+/**
+ * REST controller for user-related operations.
+ * <p>
+ * This controller handles HTTP requests related to authenticated user information.
+ * All endpoints require OAuth2 authentication via Google login.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
     private final UserRepository userRepository;
 
+    /**
+     * Constructs a new UserController with the specified repository.
+     *
+     * @param userRepository The repository for user data access.
+     */
     public UserController(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     /**
-     * A test endpoint to see WHO is logged in.
-     * Accessible at: http://localhost:8080/user
+     * Retrieves the currently authenticated user's information.
+     * <p>
+     * This endpoint uses OAuth2 principal to identify the logged-in user and
+     * fetches their complete user profile from the database.
+     * </p>
+     *
+     * @param principal The authenticated OAuth2 user (Google login).
+     * @return The User object for the authenticated user, or null if not found.
      */
     @GetMapping
     public User getCurrentUser(@AuthenticationPrincipal OAuth2User principal) {

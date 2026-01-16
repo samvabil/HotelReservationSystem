@@ -4,9 +4,24 @@ import { useSelector } from 'react-redux';
 import { type RootState } from '../store/store'; 
 import { Box, CircularProgress, Typography } from '@mui/material';
 
-// ⚠️ MAKE SURE THIS MATCHES YOUR SPRING BOOT PORT
+/**
+ * The base URL for the Spring Boot backend API.
+ * Reads from environment variable VITE_API_URL or defaults to localhost:8080.
+ */
 const SPRING_BOOT_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
+/**
+ * Route protection component that requires guest user authentication.
+ * <p>
+ * If the user is not authenticated, redirects to Google OAuth login.
+ * The current path is saved to sessionStorage for redirect after login.
+ * Shows a loading spinner during the authentication check and redirect.
+ * </p>
+ *
+ * @param {Object} props - Component props.
+ * @param {React.ReactElement} props.children - The protected component to render when authenticated.
+ * @returns {JSX.Element} Either the protected children or a loading/redirect screen.
+ */
 const RequireAuth = ({ children }: { children: React.ReactElement }) => {
     // 1. Check your Redux store to see if the user is logged in
     const { isAuthenticated } = useSelector((state: RootState) => state.userAuth);

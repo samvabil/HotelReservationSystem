@@ -23,6 +23,17 @@ import com.skillstorm.hotelreservationsystem.repositories.UserRepository;
 import com.stripe.model.Refund;
 import com.stripe.param.RefundCreateParams;
 
+/**
+ * Service class for managing reservation operations.
+ * <p>
+ * This service handles business logic for creating, updating, canceling, and retrieving
+ * reservations. It coordinates between repositories, manages room availability, processes
+ * payments via Stripe, and sends confirmation emails.
+ * </p>
+ *
+ * @author SkillStorm
+ * @version 1.0
+ */
 @Service
 public class ReservationService {
 
@@ -32,6 +43,15 @@ public class ReservationService {
     private final RoomTypeRepository roomTypeRepository;
     private final EmailService emailService;
 
+    /**
+     * Constructs a new ReservationService with the required repositories and services.
+     *
+     * @param reservationRepository The repository for reservation data access.
+     * @param roomRepository The repository for room data access.
+     * @param userRepository The repository for user data access.
+     * @param roomTypeRepository The repository for room type data access.
+     * @param emailService The service for sending email notifications.
+     */
     public ReservationService(ReservationRepository reservationRepository, RoomRepository roomRepository, UserRepository userRepository, RoomTypeRepository roomTypeRepository, EmailService emailService) {
         this.reservationRepository = reservationRepository;
         this.roomRepository = roomRepository;
@@ -40,6 +60,19 @@ public class ReservationService {
         this.emailService = emailService;
     }
 
+    /**
+     * Creates a new reservation for the specified user.
+     * <p>
+     * This method validates the room availability, calculates the total price based on
+     * the number of nights and room type pricing, creates a payment transaction record,
+     * blocks the room dates, and sends a confirmation email.
+     * </p>
+     *
+     * @param request The reservation request containing room, dates, guest count, and payment details.
+     * @param userEmail The email address of the user making the reservation.
+     * @return The created reservation with all associated data populated.
+     * @throws RuntimeException if the room, user, or room type is not found.
+     */
     @Transactional
     public Reservation createReservation(ReservationRequest request, String userEmail) {
 
@@ -114,6 +147,17 @@ public class ReservationService {
         return savedReservation;
     }
 
+    /**
+     * Retrieves all reservations for a specific user by their email address.
+     * <p>
+     * This method fetches all reservations belonging to the user and populates
+     * the transient User and Room objects for frontend display.
+     * </p>
+     *
+     * @param email The email address of the user.
+     * @return A list of reservations for the specified user.
+     * @throws RuntimeException if the user is not found.
+     */
     public List<Reservation> getReservationsByUser(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -140,8 +184,20 @@ public class ReservationService {
         return reservations;
     }
 
-    // 2. CANCEL RESERVATION
-   @Transactional
+    /**
+     * Cancels a reservation and processes refunds if applicable.
+     * <p>
+     * This method implements the cancellation policy:
+     * - Reservations cancelled 72+ hours before check-in are fully refunded
+     * - Reservations cancelled less than 72 hours before check-in are not refunded
+     * - Room dates are freed up for future bookings
+     * - Cancellation confirmation emails are sent
+     * </p>
+     *
+     * @param reservationId The unique identifier of the reservation to cancel.
+     * @throws RuntimeException if the reservation or room is not found, or if refund processing fails.
+     */
+    @Transactional
     public void cancelReservation(String reservationId) {
         Reservation r = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
@@ -227,7 +283,23 @@ public class ReservationService {
         }
     }
 
-    // 3. EDIT RESERVATION
+    /**
+     * Updates an existing reservation with new details.
+     * <p>
+     * This method handles complex update scenarios:
+     * - Changing dates or room releases old room dates and books new ones
+     * - Price changes trigger refunds (for downgrades) or new charges (for upgrades)
+     * - Employee requests can waive additional charges for upgrades
+     * - Room availability is checked before applying changes
+     * </p>
+     *
+     * @param reservationId The unique identifier of the reservation to update.
+     * @param request The updated reservation details.
+     * @param empReq Whether this is an employee request (affects payment handling).
+     * @return The updated reservation with all associated data populated.
+     * @throws RuntimeException if the reservation, room, or room type is not found,
+     *                        if the new room is not available, or if payment processing fails.
+     */
     @Transactional
     public Reservation updateReservation(String reservationId, ReservationRequest request, boolean empReq) {
         // 1. Fetch Existing Reservation

@@ -20,11 +20,31 @@ import {
   clearBookingState 
 } from '../store/bookingSlice';
 
-// Options for dropdowns
+/** Available gaming console options for filtering. */
 const CONSOLE_OPTIONS = ["PS5", "Xbox Series X", "Nintendo Switch", "Retro Arcade"];
+/** Available PC performance tier options for filtering. */
 const PC_TIER_OPTIONS = ["Standard", "High-End", "God-Tier"];
+/** Available room type options for filtering. */
 const ROOM_TYPES = ["Standard", "Suite", "Penthouse", "Gaming Bunker"];
 
+/**
+ * Search bar component for filtering available rooms.
+ * <p>
+ * Provides controls for:
+ * - Check-in and check-out dates
+ * - Guest count
+ * - Advanced filters (price range, room type, beds, bedrooms, amenities)
+ * - Gaming equipment preferences (PC count, PC tier, consoles)
+ * </p>
+ * <p>
+ * All filter changes are automatically saved to Redux state and localStorage.
+ * The onSearch callback is invoked whenever filters change to trigger a room search.
+ * </p>
+ *
+ * @param {Object} props - Component props.
+ * @param {() => void} props.onSearch - Callback function invoked when search criteria change.
+ * @returns {JSX.Element} A search form with date pickers, filters, and gaming preferences.
+ */
 export default function SearchRoomsBar({ onSearch }: { onSearch: () => void }) {
   const dispatch = useDispatch();
   const bookingState = useSelector((state: RootState) => state.booking);
