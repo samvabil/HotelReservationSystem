@@ -9,7 +9,7 @@ interface PaymentFormProps {
   onSuccess: (paymentIntentId: string) => void; 
 }
 
-export default function PaymentForm({ totalCost, roomId, onSuccess }: PaymentFormProps) {
+export default function PaymentForm({ totalCost, onSuccess }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
 
