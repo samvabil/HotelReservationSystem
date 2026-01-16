@@ -26,7 +26,7 @@ public class CloudFrontSecurityFilter extends OncePerRequestFilter {
         // The AWS Load Balancer performs health checks on "/" or "/actuator/health".
         // It does NOT have the secret header, so we must let it pass, or the instance will be marked unhealthy.
         String path = request.getRequestURI();
-        if (path.equals("/") || path.startsWith("/actuator") || path.equals("/health")) {
+        if (path.equals("/") ||path.equals("/api") ||path.equals("/api/") || path.startsWith("/actuator") || path.equals("/health")) {
             filterChain.doFilter(request, response);
             return;
         }
