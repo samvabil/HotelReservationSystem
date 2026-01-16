@@ -15,10 +15,10 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import GroupIcon from '@mui/icons-material/Group';
 
 import { type RootState } from '../store/store';
-import { clearBookingState } from '../store/bookingSlice'; // Import clear action
+import { clearBookingState } from '../store/bookingSlice'; 
 import { useGetRoomByIdQuery } from '../services/roomApi'; 
 import { useCreatePaymentIntentMutation } from '../services/paymentApi';
-import { useCreateReservationMutation, useUpdateReservationMutation } from '../services/reservationApi'; // Import APIs
+import { useCreateReservationMutation, useUpdateReservationMutation } from '../services/reservationApi'; 
 import PaymentForm from '../components/PaymentForm';
 
 // Replace with your actual Publishable Key
@@ -31,24 +31,24 @@ export default function CheckoutPage() {
   
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // 1. READ STATE (Including modification ID)
+  // 1. READ STATE
   const { 
       checkInDate, 
       checkOutDate, 
       guestCount, 
-      modificationReservationId // Check if we are updating an existing booking
+      modificationReservationId 
   } = useSelector((state: RootState) => state.booking);
   
   const { data: room, isLoading, isError } = useGetRoomByIdQuery(roomId || '', { skip: !roomId });
   const [createPaymentIntent, { data: paymentData, isLoading: isPaymentLoading }] = useCreatePaymentIntentMutation();
   
-  // API Hooks for Finalizing Booking
   const [createReservation] = useCreateReservationMutation();
   const [updateReservation] = useUpdateReservationMutation();
 
   const clientSecret = paymentData?.clientSecret;
   
-  // 2. Safety Check: If user refreshed and lost state, kick them back
+  // 2. Safety Check: Keeps users out if they don't have dates
+  // (This was firing immediately because you cleared state too early!)
   useEffect(() => {
     if (!checkInDate || !checkOutDate) {
         navigate('/'); 
@@ -64,29 +64,27 @@ export default function CheckoutPage() {
   const taxes = subtotal * 0.08; 
   const total = subtotal + taxes;
 
-  // 3. Create Payment Intent when room loads
+  // 3. Create Payment Intent
   useEffect(() => {
     if (total > 0 && room) {
         createPaymentIntent({ amount: Math.round(total * 100), currency: 'usd' });
     }
   }, [total, room, createPaymentIntent]);
 
-  // 4. HANDLER: Called by PaymentForm after Stripe confirms the card
+  // 4. HANDLER: Payment Success
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     try {
         if (modificationReservationId) {
-            // --- UPDATE FLOW (Upgrade) ---
             await updateReservation({
                 id: modificationReservationId,
                 checkIn: checkInDate,
                 checkOut: checkOutDate,
                 guestCount: guestCount,
                 roomId: roomId,
-                paymentIntentId: paymentIntentId // Pass the NEW payment ID
+                paymentIntentId: paymentIntentId 
             }).unwrap();
             
         } else {
-            // --- CREATE FLOW (New Booking) ---
             await createReservation({
                 checkIn: checkInDate,
                 checkOut: checkOutDate,
@@ -96,8 +94,8 @@ export default function CheckoutPage() {
             }).unwrap();
         }
         
-        // Clear global state so they can make a fresh booking next time
-        dispatch(clearBookingState());
+        // FIX: Do NOT clear state here. 
+        // If you clear it here, the useEffect above fires and redirects to Home immediately.
         setShowSuccessModal(true);
         
     } catch (error) {
@@ -106,10 +104,15 @@ export default function CheckoutPage() {
     }
   };
 
+  // Helper to clear state AND navigate
+  const handleFinish = (path: string) => {
+      dispatch(clearBookingState()); // Clear it NOW, as they leave
+      navigate(path);
+  };
+
   if (isLoading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
   if (isError || !room) return <Alert severity="error">Room not found or unavailable.</Alert>;
 
-  // If redirected, prevent flash of content
   if (!checkInDate || !checkOutDate) return null; 
 
   return (
@@ -120,8 +123,8 @@ export default function CheckoutPage() {
         </Typography>
 
         <Grid container spacing={4}>
-            {/* LEFT COLUMN: ORDER SUMMARY (READ ONLY) */}
-            <Grid size ={{xs: 12, md: 5}} >
+            {/* LEFT COLUMN: ORDER SUMMARY */}
+            <Grid size = {{xs:12, md:5}} >
                 <Card elevation={4} sx={{ bgcolor: 'background.paper', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                     <CardContent sx={{ p: 3 }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 2 }}>Order Summary</Typography>
@@ -129,13 +132,8 @@ export default function CheckoutPage() {
                             <Typography variant="h5" fontWeight="bold">{room?.roomTypeId?.name}</Typography>
                             <Typography variant="body1" color="text.secondary">Room {room?.roomNumber}</Typography>
                         </Box>
-                        
                         <Divider sx={{ mb: 3 }} />
-                        
-                        {/* READ-ONLY DATES & GUESTS */}
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
-                            
-                            {/* Dates */}
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <CalendarTodayIcon color="action" fontSize="small" />
@@ -143,7 +141,6 @@ export default function CheckoutPage() {
                                 </Box>
                                 <Typography fontWeight="bold">{checkIn.format('ddd, MMM D, YYYY')}</Typography>
                             </Box>
-
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <CalendarTodayIcon color="action" fontSize="small" />
@@ -151,8 +148,6 @@ export default function CheckoutPage() {
                                 </Box>
                                 <Typography fontWeight="bold">{checkOut.format('ddd, MMM D, YYYY')}</Typography>
                             </Box>
-
-                            {/* Guest Count */}
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <GroupIcon color="action" fontSize="small" />
@@ -161,9 +156,7 @@ export default function CheckoutPage() {
                                 <Typography fontWeight="bold">{guestCount}</Typography>
                             </Box>
                         </Box>
-
                         <Divider sx={{ my: 2 }} />
-                        
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                             <Typography color="text.secondary">${pricePerNight} x {nights} nights</Typography>
                             <Typography fontWeight="medium">${subtotal.toFixed(2)}</Typography>
@@ -177,12 +170,11 @@ export default function CheckoutPage() {
             </Grid>
 
             {/* RIGHT COLUMN: PAYMENT FORM */}
-            <Grid size = {{xs: 12, md: 7}} >
+            <Grid size = {{xs:12, md:7}} >
                 <Card elevation={3} sx={{ p: 2 }}>
                     <CardContent>
                         <Typography variant="h6" gutterBottom>Payment Details</Typography>
                         <Divider sx={{ mb: 3 }} />
-                        
                         {clientSecret ? (
                             <Elements stripe={stripePromise} options={{ clientSecret }}>
                                 <PaymentForm 
@@ -220,16 +212,16 @@ export default function CheckoutPage() {
             </DialogContent>
             <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 4 }}>
                 <Button 
-                    variant="outlined" 
+                    variant="contained" 
                     size="large" 
-                    onClick={() => navigate('/')}
+                    onClick={() => handleFinish('/')}
                 >
                     Back to Home
                 </Button>
                 <Button 
                     variant="contained" 
                     size="large" 
-                    onClick={() => navigate('/account')}
+                    onClick={() => handleFinish('/account')}
                 >
                     Go to My Account
                 </Button>
