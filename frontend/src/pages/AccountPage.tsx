@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { useDispatch } from 'react-redux'; // Added
-import { useNavigate } from 'react-router-dom'; // Added
+import { useDispatch } from 'react-redux'; 
+import { useNavigate } from 'react-router-dom'; 
 import { 
     Container, Typography, Box, Card, CardContent, 
     Chip, Button, CircularProgress, Alert, 
@@ -14,7 +14,7 @@ import {
     useUpdateReservationMutation 
 } from '../services/reservationApi';
 import { useSearchRoomsQuery } from '../services/roomApi'; 
-import { setDatesAndGuests, selectRoom, startModification } from '../store/bookingSlice'; // Added actions
+import { setDatesAndGuests, selectRoom, startModification } from '../store/bookingSlice'; 
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'; 
@@ -49,7 +49,6 @@ export default function AccountPage() {
     });
 
     // --- DYNAMIC SEARCH FOR EDITING ---
-    // This runs automatically when editData changes to fetch current prices/availability
     const searchCriteria = useMemo(() => {
         if (!editData) return undefined; 
 
@@ -153,7 +152,6 @@ export default function AccountPage() {
                 guests: editData.guestCount
             }));
             dispatch(selectRoom(editData.roomId));
-            // You must add 'startModification' to your bookingSlice for this to work!
             dispatch(startModification(editData.id)); 
 
             navigate(`/checkout/${editData.roomId}`);
@@ -188,7 +186,7 @@ export default function AccountPage() {
                 message: `Update Failed: ${err?.data?.message || "Room might not be available."}`, 
                 severity: 'error' 
             });
-            setConfirmModal(null); // Close modal on error so they can try again
+            setConfirmModal(null); 
         }
     };
 
@@ -204,16 +202,48 @@ export default function AccountPage() {
 
     const handleFilterChange = (event: SelectChangeEvent) => setFilter(event.target.value as any);
 
-    const filteredReservations = reservations?.filter((res: any) => {
-        const isCanceled = res.status === 'CANCELLED' || res.status === 'REFUNDED';
-        const isPast = dayjs(res.checkOut).isBefore(dayjs(), 'day'); 
-        switch (filter) {
-            case 'CURRENT': return !isCanceled && !isPast;
-            case 'PAST': return !isCanceled && isPast;
-            case 'CANCELED': return isCanceled;
-            case 'ALL': default: return true;
-        }
-    });
+    // --- SORTING LOGIC START ---
+    const filteredReservations = reservations
+        ?.filter((res: any) => {
+            const isCanceled = res.status === 'CANCELLED' || res.status === 'REFUNDED';
+            const isPast = dayjs(res.checkOut).isBefore(dayjs(), 'day'); 
+            switch (filter) {
+                case 'CURRENT': return !isCanceled && !isPast;
+                case 'PAST': return !isCanceled && isPast;
+                case 'CANCELED': return isCanceled;
+                case 'ALL': default: return true;
+            }
+        })
+        .sort((a: any, b: any) => {
+            // Priority Mapping:
+            // 1. Upcoming (Active)
+            // 2. Completed (Past)
+            // 3. Refunded
+            // 4. Canceled
+            
+            const getPriority = (res: any) => {
+                const isCanceled = res.status === 'CANCELLED';
+                const isRefunded = res.status === 'REFUNDED';
+                const isPast = dayjs(res.checkOut).isBefore(dayjs(), 'day');
+
+                if (isCanceled) return 4;
+                if (isRefunded) return 3;
+                if (isPast) return 2;
+                return 1; // Upcoming
+            };
+
+            const priorityA = getPriority(a);
+            const priorityB = getPriority(b);
+
+            // Primary Sort: By Status Priority
+            if (priorityA !== priorityB) {
+                return priorityA - priorityB;
+            }
+
+            // Secondary Sort: By Date (Chronological)
+            return dayjs(a.checkIn).diff(dayjs(b.checkIn));
+        });
+    // --- SORTING LOGIC END ---
 
     if (isLoading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 10 }}><CircularProgress /></Box>;
     if (isError) return <Alert severity="error">Failed to load reservations.</Alert>;
@@ -353,14 +383,14 @@ export default function AccountPage() {
                                     onChange={(e) => setEditData({...editData, checkOut: e.target.value})}
                                     onClick={openDatePicker}
                                     sx={{
-                                        '& .MuiInputBase-root': { cursor: 'pointer' },
+                                        '& .MuiInputBase-root': { cursor: 'pointer' }, 
                                         '& input': { cursor: 'pointer' },
                                         '& input::-webkit-calendar-picker-indicator': { display: 'none' } 
                                     }}
                                     InputProps={{
                                         endAdornment: (
                                             <InputAdornment position="end">
-                                                <CalendarMonthIcon color="primary" sx={{ pointerEvents: 'none' }} />
+                                                <CalendarMonthIcon color="primary" sx={{ pointerEvents: 'none' }} /> 
                                             </InputAdornment>
                                         )
                                     }}
