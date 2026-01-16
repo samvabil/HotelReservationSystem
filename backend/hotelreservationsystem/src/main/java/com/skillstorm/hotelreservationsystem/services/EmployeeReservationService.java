@@ -109,7 +109,7 @@ public class EmployeeReservationService {
 
         // Reuse your overlap and unavailableDates logic by calling the existing service update method,
         // but note: your updateReservation recalculates totalPrice and updates room calendars.
-        Reservation updated = reservationService.updateReservation(reservationId, request);
+        Reservation updated = reservationService.updateReservation(reservationId, request, true);
 
         // Ensure hydration for employee UI
         hydrate(List.of(updated));

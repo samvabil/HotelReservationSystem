@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react';
+import { useDispatch } from 'react-redux'; // Added
+import { useNavigate } from 'react-router-dom'; // Added
 import { 
     Container, Typography, Box, Card, CardContent, 
     Chip, Button, CircularProgress, Alert, 
     FormControl, InputLabel, Select, MenuItem, type SelectChangeEvent,
     Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
-    TextField, Grid, InputAdornment, Snackbar // <--- 1. Import Snackbar
+    TextField, Grid, InputAdornment, Snackbar 
 } from '@mui/material';
 import { 
     useGetMyReservationsQuery, 
@@ -12,12 +14,16 @@ import {
     useUpdateReservationMutation 
 } from '../services/reservationApi';
 import { useSearchRoomsQuery } from '../services/roomApi'; 
+import { setDatesAndGuests, selectRoom, startModification } from '../store/bookingSlice'; // Added actions
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth'; 
 import dayjs from 'dayjs';
 
 export default function AccountPage() {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
     const { data: reservations, isLoading, isError } = useGetMyReservationsQuery(undefined);
     const [cancelReservation] = useCancelReservationMutation();
     const [updateReservation] = useUpdateReservationMutation();
@@ -27,20 +33,23 @@ export default function AccountPage() {
     // --- STATE MANAGEMENT ---
     const [cancelId, setCancelId] = useState<string | null>(null);
     const [editData, setEditData] = useState<any | null>(null);
+    
+    // NEW: Confirmation Modal State for Upgrades/Refunds
+    const [confirmModal, setConfirmModal] = useState<{ 
+        open: boolean, 
+        type: 'UPGRADE' | 'REFUND' | 'SAME', 
+        diff: number, 
+        newTotal: number 
+    } | null>(null);
 
-    // 2. NEW STATE: Toast Notification (Open, Message, Type)
     const [toast, setToast] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
         open: false,
         message: '',
         severity: 'success'
     });
 
-    // 3. TOAST HANDLER
-    const handleCloseToast = () => {
-        setToast({ ...toast, open: false });
-    };
-
     // --- DYNAMIC SEARCH FOR EDITING ---
+    // This runs automatically when editData changes to fetch current prices/availability
     const searchCriteria = useMemo(() => {
         if (!editData) return undefined; 
 
@@ -61,11 +70,22 @@ export default function AccountPage() {
     const { data: searchResults } = useSearchRoomsQuery(searchCriteria as any, { skip: !editData });
 
     // --- HANDLERS ---
+
+    const handleCloseToast = () => {
+        setToast({ ...toast, open: false });
+    };
+
     const handleClickCancel = (id: string) => setCancelId(id);
     const handleCloseCancel = () => setCancelId(null);
+    
     const handleConfirmCancel = async () => {
         if (cancelId) {
-            await cancelReservation(cancelId);
+            try {
+                await cancelReservation(cancelId).unwrap();
+                setToast({ open: true, message: "Reservation canceled successfully.", severity: 'success' });
+            } catch (err) {
+                setToast({ open: true, message: "Failed to cancel reservation.", severity: 'error' });
+            }
             setCancelId(null);
         }
     };
@@ -78,44 +98,103 @@ export default function AccountPage() {
             guestCount: reservation.guestCount,
             roomId: reservation.roomId, 
             roomTypeId: reservation.room?.roomTypeId?.id || reservation.room?.roomTypeId,
-            originalRoom: reservation.room 
+            originalRoom: reservation.room,
+            oldTotal: reservation.totalPrice // Capture old price for comparison
         });
     };
 
     const handleCloseEdit = () => setEditData(null);
 
-    const handleSaveEdit = async () => {
+    // 1. PRE-CHECK: Calculate Price Difference
+    const handlePreSaveCheck = () => {
         if (!editData) return;
+
+        // A. Find New Price info
+        let newPricePerNight = 0;
+        
+        // If room type didn't change, get price from original room data
+        if (editData.roomTypeId === editData.originalRoom?.roomTypeId?.id) {
+            newPricePerNight = editData.originalRoom.roomTypeId.pricePerNight;
+        } else {
+            // If changed, find price in search results
+            const result = searchResults?.find((r: any) => r.roomType.id === editData.roomTypeId);
+            if (result) newPricePerNight = result.roomType.pricePerNight;
+        }
+
+        // B. Calculate New Total
+        const checkIn = dayjs(editData.checkIn);
+        const checkOut = dayjs(editData.checkOut);
+        const nights = Math.max(1, checkOut.diff(checkIn, 'day'));
+        const newTotal = newPricePerNight * nights;
+
+        // C. Compare with Old Total
+        const oldTotal = editData.oldTotal || 0; 
+        const diff = newTotal - oldTotal;
+
+        // D. Open Confirmation Modal based on result
+        if (diff > 0) {
+            setConfirmModal({ open: true, type: 'UPGRADE', diff, newTotal });
+        } else if (diff < 0) {
+            setConfirmModal({ open: true, type: 'REFUND', diff, newTotal });
+        } else {
+            // No price change, just save immediately
+            processUpdate(); 
+        }
+    };
+
+    // 2. EXECUTE UPDATE (Or Redirect)
+    const processUpdate = async () => {
+        // CASE A: Upgrade (Redirect to Checkout)
+        if (confirmModal?.type === 'UPGRADE') {
+            // Update Redux so CheckoutPage knows what to do
+            dispatch(setDatesAndGuests({
+                checkIn: editData.checkIn,
+                checkOut: editData.checkOut,
+                guests: editData.guestCount
+            }));
+            dispatch(selectRoom(editData.roomId));
+            // You must add 'startModification' to your bookingSlice for this to work!
+            dispatch(startModification(editData.id)); 
+
+            navigate(`/checkout/${editData.roomId}`);
+            return; 
+        }
+
+        // CASE B: Refund or Same Price (Call API directly)
         try {
             await updateReservation({
                 id: editData.id,
                 checkIn: editData.checkIn,
                 checkOut: editData.checkOut,
                 guestCount: editData.guestCount,
-                roomId: editData.roomId
-            }).unwrap(); 
+                roomId: editData.roomId,
+                // paymentIntentId is null here because we aren't charging
+            }).unwrap();
 
-            setEditData(null); 
-            
-            // 4. REPLACED ALERT WITH TOAST (SUCCESS)
+            setConfirmModal(null);
+            setEditData(null);
             setToast({ 
                 open: true, 
-                message: "Reservation updated successfully!", 
+                message: confirmModal?.type === 'REFUND' 
+                    ? `Reservation updated! A refund of $${Math.abs(confirmModal.diff).toFixed(2)} has been initiated.`
+                    : "Reservation updated successfully!", 
                 severity: 'success' 
             });
 
         } catch (err: any) {
             console.error("Update failed:", err);
-            
-            // 4. REPLACED ALERT WITH TOAST (ERROR)
             setToast({ 
                 open: true, 
-                message: `Update Failed: ${err?.data?.message || "Room might not be available for these dates."}`, 
+                message: `Update Failed: ${err?.data?.message || "Room might not be available."}`, 
                 severity: 'error' 
             });
+            setConfirmModal(null); // Close modal on error so they can try again
         }
     };
 
+    const handleCloseConfirm = () => setConfirmModal(null);
+
+    // --- UTILS ---
     const openDatePicker = (e: React.MouseEvent<HTMLDivElement>) => {
         const input = e.currentTarget.querySelector('input');
         if (input && 'showPicker' in input) {
@@ -123,7 +202,6 @@ export default function AccountPage() {
         }
     };
 
-    // --- FILTER LOGIC ---
     const handleFilterChange = (event: SelectChangeEvent) => setFilter(event.target.value as any);
 
     const filteredReservations = reservations?.filter((res: any) => {
@@ -231,7 +309,7 @@ export default function AccountPage() {
                 </Box>
             )}
 
-            {/* EDIT RESERVATION DIALOG */}
+            {/* --- EDIT RESERVATION DIALOG --- */}
             <Dialog open={!!editData} onClose={handleCloseEdit} maxWidth="sm" fullWidth>
                 <DialogTitle sx={{ fontWeight: 'bold' }}>Edit Reservation</DialogTitle>
                 <DialogContent>
@@ -338,11 +416,43 @@ export default function AccountPage() {
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>
                     <Button onClick={handleCloseEdit} variant="outlined" color="inherit">Cancel</Button>
-                    <Button onClick={handleSaveEdit} variant="contained" color="primary">Save Changes</Button>
+                    <Button onClick={handlePreSaveCheck} variant="contained" color="primary">Review Changes</Button>
                 </DialogActions>
             </Dialog>
 
-            {/* CANCEL CONFIRMATION DIALOG */}
+            {/* --- PRICE CONFIRMATION MODAL --- */}
+            <Dialog open={!!confirmModal} onClose={handleCloseConfirm} maxWidth="xs" fullWidth>
+                <DialogTitle sx={{ fontWeight: 'bold' }}>
+                    {confirmModal?.type === 'UPGRADE' ? 'Additional Payment Required' : 'Confirm Update'}
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {confirmModal?.type === 'UPGRADE' && (
+                            <>
+                                This change increases the total cost by <strong>${confirmModal.diff.toFixed(2)}</strong>.
+                                <br /><br />
+                                You will be redirected to checkout to pay the full new amount (<strong>${confirmModal.newTotal.toFixed(2)}</strong>).
+                                Your previous payment will be automatically refunded.
+                            </>
+                        )}
+                        {confirmModal?.type === 'REFUND' && (
+                            <>
+                                This change decreases the total cost by <strong>${Math.abs(confirmModal.diff).toFixed(2)}</strong>.
+                                <br /><br />
+                                The difference will be automatically refunded to your original payment method.
+                            </>
+                        )}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={handleCloseConfirm} color="inherit">Cancel</Button>
+                    <Button onClick={processUpdate} variant="contained" color="primary">
+                        {confirmModal?.type === 'UPGRADE' ? 'Proceed to Checkout' : 'Confirm Update'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* --- CANCEL CONFIRMATION DIALOG --- */}
             <Dialog open={!!cancelId} onClose={handleCloseCancel}>
                 <DialogTitle sx={{ color: 'error.main', fontWeight: 'bold' }}>Cancel Reservation?</DialogTitle>
                 <DialogContent>
@@ -356,7 +466,7 @@ export default function AccountPage() {
                 </DialogActions>
             </Dialog>
 
-            {/* 5. ADD SNACKBAR COMPONENT */}
+            {/* --- SNACKBAR --- */}
             <Snackbar 
                 open={toast.open} 
                 autoHideDuration={6000} 
@@ -367,7 +477,7 @@ export default function AccountPage() {
                     onClose={handleCloseToast} 
                     severity={toast.severity} 
                     sx={{ width: '100%' }}
-                    variant="filled" // Makes the toast "pop" more
+                    variant="filled" 
                 >
                     {toast.message}
                 </Alert>

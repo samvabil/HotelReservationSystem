@@ -229,38 +229,49 @@ public class ReservationService {
 
     // 3. EDIT RESERVATION
     @Transactional
-    public Reservation updateReservation(String reservationId, ReservationRequest request) {
+    public Reservation updateReservation(String reservationId, ReservationRequest request, boolean empReq) {
+        // 1. Fetch Existing Reservation
         Reservation r = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found"));
 
-        // 1. Check what actually changed
+        // Snapshot old details for price comparison later
+        double oldTotalPrice = r.getTotalPrice();
+        String oldPaymentIntentId = r.getPaymentIntentId();
+        String oldRoomId = r.getRoomId();
+
+        // 2. Handle Room/Date Changes
+        // Check if the dates or room actually changed to avoid unnecessary database work
         boolean datesChanged = !r.getCheckIn().equals(request.getCheckIn()) || !r.getCheckOut().equals(request.getCheckOut());
-        boolean roomChanged = !r.getRoomId().equals(request.getRoomId()); // <--- CRITICAL: Detect Room Change
+        boolean roomChanged = !r.getRoomId().equals(request.getRoomId());
+
+        Room targetRoom;
 
         if (datesChanged || roomChanged) {
-            
-            // A. RELEASE THE OLD ROOM (Clear its calendar)
-            Room oldRoom = roomRepository.findById(r.getRoomId()).orElseThrow();
+            // A. Release the Old Room Dates
+            // We must clear the calendar for the old room so that if the user is 
+            // just changing dates in the same room, we don't block ourselves.
+            Room oldRoom = roomRepository.findById(oldRoomId).orElseThrow();
             if (oldRoom.getUnavailableDates() != null) {
-                // Remove the specific date range for this reservation
                 oldRoom.getUnavailableDates().removeIf(date -> 
                     date.getStart().equals(r.getCheckIn()) && date.getEnd().equals(r.getCheckOut())
                 );
             }
-            roomRepository.save(oldRoom); // Save the "freed up" old room
+            roomRepository.save(oldRoom);
 
-            // B. PREPARE THE NEW ROOM
-            // If roomChanged is true, fetch the NEW ID. If not, re-fetch the OLD ID (which we just cleared).
-            Room targetRoom = roomChanged ? 
-                    roomRepository.findById(request.getRoomId()).orElseThrow(() -> new RuntimeException("New Room not found")) 
-                    : oldRoom;
+            // B. Determine Target Room
+            if (roomChanged) {
+                targetRoom = roomRepository.findById(request.getRoomId())
+                        .orElseThrow(() -> new RuntimeException("New Room not found"));
+            } else {
+                // If room didn't change, we are re-booking the old room (which we just cleared dates for)
+                targetRoom = oldRoom;
+            }
 
-            // C. CHECK AVAILABILITY ON TARGET ROOM
-            // We check if the target room has ANY overlap with the requested dates
+            // C. Check Availability on Target Room
             boolean isAvailable = true;
             if (targetRoom.getUnavailableDates() != null) {
                 for (Room.UnavailableDate date : targetRoom.getUnavailableDates()) {
-                    // Standard Overlap Logic: (StartA < EndB) and (EndA > StartB)
+                    // Standard Date Overlap Check
                     if (request.getCheckIn().isBefore(date.getEnd()) && request.getCheckOut().isAfter(date.getStart())) {
                         isAvailable = false;
                         break;
@@ -269,48 +280,126 @@ public class ReservationService {
             }
 
             if (!isAvailable) {
-                // Throwing this RuntimeException triggers @Transactional rollback 
-                // (The old room dates will automatically be restored by the DB rollback)
+                // Throwing RuntimeException triggers @Transactional rollback, 
+                // restoring the old room's calendar automatically.
                 throw new RuntimeException("The selected room is not available for these dates.");
             }
 
-            // D. BOOK THE TARGET ROOM
-            if (targetRoom.getUnavailableDates() == null) targetRoom.setUnavailableDates(new ArrayList<>());
+            // D. Book the Target Room
+            if (targetRoom.getUnavailableDates() == null) {
+                targetRoom.setUnavailableDates(new ArrayList<>());
+            }
             targetRoom.getUnavailableDates().add(new Room.UnavailableDate(request.getCheckIn(), request.getCheckOut()));
             roomRepository.save(targetRoom);
 
-            // E. UPDATE RESERVATION DETAILS
-            r.setRoomId(targetRoom.getId()); // <--- CRITICAL: Update the ID
+            // E. Update Reservation Data
+            r.setRoomId(targetRoom.getId());
             r.setCheckIn(request.getCheckIn());
             r.setCheckOut(request.getCheckOut());
-
-            // F. RECALCULATE PRICE
-            // We must fetch the type of the TARGET room to get the correct price
+            
+            // F. Recalculate Total Price
+            // Must fetch RoomType to get the correct nightly rate
             RoomType type = roomTypeRepository.findById(targetRoom.getRoomTypeId()).orElseThrow();
             long nights = java.time.temporal.ChronoUnit.DAYS.between(request.getCheckIn(), request.getCheckOut());
             if (nights < 1) nights = 1;
             
-            r.setTotalPrice(type.getPricePerNight() * nights);
+            double newTotalPrice = type.getPricePerNight() * nights;
+            r.setTotalPrice(newTotalPrice);
+            
+        } else {
+            // If only guest count changed, we still need the room object for email/return
+            targetRoom = roomRepository.findById(r.getRoomId()).orElseThrow();
         }
 
-        // 2. Update Guest Count (Always)
+        // 3. Update Guest Count (Always allow this update)
         r.setGuestCount(request.getGuestCount());
 
+        // 4. Handle Payments (Refunds or Charges)
+        long priceDiffCents = Math.round((r.getTotalPrice() - oldTotalPrice) * 100);
+
+        // CASE A: CHEAPER (Downgrade) -> Refund the difference
+        // We do this for both Employees AND Guests (returning money is always good)
+        if (priceDiffCents < 0) {
+            long refundAmount = Math.abs(priceDiffCents);
+            try {
+                // If it's a real Stripe transaction (not a test seed), process refund
+                if (oldPaymentIntentId != null && !oldPaymentIntentId.startsWith("pi_test_seed")) {
+                    RefundCreateParams params = RefundCreateParams.builder()
+                            .setPaymentIntent(oldPaymentIntentId)
+                            .setAmount(refundAmount)
+                            .build();
+                    Refund refund = Refund.create(params);
+                    System.out.println("Partial refund successful: " + refund.getId());
+                }
+            } catch (Exception e) {
+                // Log but don't fail the reservation update if refund fails? 
+                // Alternatively, throw exception to rollback everything.
+                System.err.println("Failed to process partial refund: " + e.getMessage());
+            }
+        } 
+        // CASE B: MORE EXPENSIVE (Upgrade)
+        else if (priceDiffCents > 0) {
+            
+            if (empReq) {
+                // --- EMPLOYEE OVERRIDE ---
+                // Do NOT charge the card. Keep the reservation total price updated 
+                // (so reports are accurate), but do not process a new Stripe transaction.
+                System.out.println("Employee Upgrade: Waiving additional cost of " + priceDiffCents + " cents.");
+                
+                // Optional: You could add a note to the reservation or transaction log here
+                // r.addNote("Upgrade fee waived by employee");
+                
+            } else {
+                // --- GUEST FLOW (Requires Payment) ---
+                String newPaymentIntentId = request.getPaymentIntentId();
+                
+                // If the frontend didn't send a new payment ID, we can't proceed
+                if (newPaymentIntentId == null || newPaymentIntentId.isEmpty() || newPaymentIntentId.equals(oldPaymentIntentId)) {
+                    throw new RuntimeException("Price increased. New payment required.");
+                }
+
+                try {
+                    // 1. Refund the OLD transaction entirely (Clean slate)
+                    if (oldPaymentIntentId != null && !oldPaymentIntentId.startsWith("pi_test_seed")) {
+                        RefundCreateParams params = RefundCreateParams.builder()
+                                .setPaymentIntent(oldPaymentIntentId)
+                                .build();
+                        Refund.create(params);
+                    }
+
+                    // 2. Attach the NEW transaction to the reservation
+                    r.setPaymentIntentId(newPaymentIntentId);
+                    
+                    Reservation.PaymentTransaction txn = new Reservation.PaymentTransaction();
+                    txn.setProvider("STRIPE");
+                    txn.setTransactionId(newPaymentIntentId);
+                    txn.setAmountCents(Math.round(r.getTotalPrice() * 100));
+                    txn.setCurrency("usd");
+                    txn.setStatus("SUCCEEDED");
+                    txn.setPaidAt(Instant.now());
+                    r.setTransaction(txn);
+
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to swap payment transactions: " + e.getMessage());
+                }
+            }
+        }
+
+        // 5. Save Changes
         Reservation savedReservation = reservationRepository.save(r);
 
-        // 3. Send Email
+        // 6. Send Confirmation Email
         try {
             User user = userRepository.findById(r.getUserId()).orElseThrow();
             r.setUser(user);
+            r.setRoom(targetRoom);
             
-            // Hydrate room details for the email
-            Room currentRoom = roomRepository.findById(r.getRoomId()).orElseThrow();
-            if (currentRoom.getRoomType() == null) {
-                RoomType type = roomTypeRepository.findById(currentRoom.getRoomTypeId()).orElse(null);
-                currentRoom.setRoomType(type);
+            // Hydrate Room Type for the email template
+            if (targetRoom.getRoomType() == null) {
+                RoomType type = roomTypeRepository.findById(targetRoom.getRoomTypeId()).orElse(null);
+                targetRoom.setRoomType(type);
             }
-            r.setRoom(currentRoom);
-
+            
             emailService.sendUpdateConfirmation(user.getEmail(), r);
         } catch (Exception e) {
             System.err.println("Failed to send update email: " + e.getMessage());
