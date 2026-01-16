@@ -244,7 +244,7 @@ export default function CheckoutPage() {
                     size="large" 
                     onClick={() => handleFinish('/account')}
                 >
-                    Go to My Account
+                    Go to My Reservations
                 </Button>
             </DialogActions>
         </Dialog>
