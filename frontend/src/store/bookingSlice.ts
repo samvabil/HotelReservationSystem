@@ -29,12 +29,16 @@ export interface BookingState {
   filters: RoomFilters;
   gamingPreferences: GamingPreferences;
   selectedRoomId: string | null;
+
+  modificationReservationId: string | null;
 }
 
 const initialState: BookingState = {
   checkInDate: null,
   checkOutDate: null,
   guestCount: 2, 
+
+  modificationReservationId: null,
   
   filters: {
     roomType: null,
@@ -103,7 +107,12 @@ const bookingSlice = createSlice({
       localStorage.setItem('bookingState', JSON.stringify(state));
     },
 
-    clearBookingState: () => {
+    startModification: (state, action: PayloadAction<string>) => {
+      state.modificationReservationId = action.payload;
+      localStorage.setItem('bookingState', JSON.stringify(state));
+    },
+
+    clearBookingState: ( ) => {
       localStorage.removeItem('bookingState');
       return initialState;
     }
@@ -115,7 +124,8 @@ export const {
   setGuestCount,
   setFilters, 
   setGamingPreferences, 
-  selectRoom, 
+  selectRoom,
+  startModification,
   clearBookingState 
 } = bookingSlice.actions;
 

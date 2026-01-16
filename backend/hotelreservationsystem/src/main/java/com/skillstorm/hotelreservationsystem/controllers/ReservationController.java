@@ -38,7 +38,7 @@ public class ReservationController {
 
     @PutMapping("/{id}")
     public Reservation updateReservation(@PathVariable String id, @RequestBody ReservationRequest request) {
-        return reservationService.updateReservation(id, request);
+        return reservationService.updateReservation(id, request, false);
     }
 
     @DeleteMapping("/{id}")
