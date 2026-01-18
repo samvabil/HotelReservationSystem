@@ -32,8 +32,8 @@ export const employeeRoomsAdminApi = apiSlice.injectEndpoints({
      */
     getAdminRooms: builder.query<Room[], { roomTypeId?: string } | void>({
       query: (arg) => {
-        if (!arg || !arg.roomTypeId) return "/employees/admin/rooms";
-        return { url: "/employees/admin/rooms", params: { roomTypeId: arg.roomTypeId } };
+        if (!arg || !arg.roomTypeId) return "/api/employees/admin/rooms";
+        return { url: "/api/employees/admin/rooms", params: { roomTypeId: arg.roomTypeId } };
       },
       providesTags: (result) =>
         result
@@ -52,7 +52,7 @@ export const employeeRoomsAdminApi = apiSlice.injectEndpoints({
      */
     createAdminRoom: builder.mutation<Room, RoomUpsertBody>({
       query: (body) => ({
-        url: "/employees/admin/rooms",
+        url: "/api/employees/admin/rooms",
         method: "POST",
         body,
       }),
@@ -68,7 +68,7 @@ export const employeeRoomsAdminApi = apiSlice.injectEndpoints({
      */
     updateAdminRoom: builder.mutation<Room, { id: string; body: RoomUpsertBody }>({
       query: ({ id, body }) => ({
-        url: `/employees/admin/rooms/${id}`,
+        url: `/api/employees/admin/rooms/${id}`,
         method: "PUT",
         body,
       }),
@@ -85,7 +85,7 @@ export const employeeRoomsAdminApi = apiSlice.injectEndpoints({
      */
     deleteAdminRoom: builder.mutation<void, string>({
       query: (id) => ({
-        url: `/employees/admin/rooms/${id}`,
+        url: `/api/employees/admin/rooms/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: [{ type: "Room", id: "LIST" }],

@@ -42,7 +42,7 @@ export const employeeAuthApi = apiSlice.injectEndpoints({
      */
     startEmployeeSession: builder.mutation<void, { email: string; password: string }>({
     query: ({ email, password }) => ({
-        url: "/employees/session",
+        url: "/api/employees/session",
         method: "POST",
         headers: {
         Authorization: basicHeader(email.trim(), password),
@@ -56,7 +56,7 @@ export const employeeAuthApi = apiSlice.injectEndpoints({
      * After a session is established, this uses cookies only (no Basic Auth header).
      */
     getEmployeeMe: builder.query<EmployeeMe, void>({
-      query: () => "/employees/me",
+      query: () => "/api/employees/me",
     }),
 
     /**
@@ -64,7 +64,7 @@ export const employeeAuthApi = apiSlice.injectEndpoints({
      */
     logoutEmployee: builder.mutation<void, void>({
       query: () => ({
-        url: "/employees/logout",
+        url: "/api/employees/logout",
         method: "POST",
       }),
     }),
