@@ -37,7 +37,7 @@ import jakarta.validation.Valid;
  * @version 1.0
  */
 @RestController
-@RequestMapping("/api/employees/reservations")
+@RequestMapping("employees/reservations")
 public class EmployeeReservationController {
 
     private final EmployeeReservationService employeeReservationService;

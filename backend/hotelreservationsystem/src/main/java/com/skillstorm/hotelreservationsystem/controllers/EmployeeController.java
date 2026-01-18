@@ -35,7 +35,7 @@ import jakarta.validation.Valid;
  * @version 1.0
  */
 @RestController
-@RequestMapping("/api/employees")
+@RequestMapping("employees")
 public class EmployeeController {
 
     private final EmployeeAdminService employeeAdminService;

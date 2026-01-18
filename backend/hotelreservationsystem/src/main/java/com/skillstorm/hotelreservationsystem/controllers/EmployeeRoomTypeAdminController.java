@@ -34,7 +34,7 @@ import jakarta.validation.Valid;
  * @version 1.0
  */
 @RestController
-@RequestMapping("/api/employees/admin/room-types")
+@RequestMapping("employees/admin/room-types")
 public class EmployeeRoomTypeAdminController {
 
     private final RoomTypeAdminService roomTypeAdminService;

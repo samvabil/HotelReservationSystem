@@ -32,7 +32,7 @@ import jakarta.validation.Valid;
  * @version 1.0
  */
 @RestController
-@RequestMapping("/api/employees/admin/rooms")
+@RequestMapping("employees/admin/rooms")
 public class EmployeeRoomAdminController {
 
     private final RoomAdminService roomAdminService;
