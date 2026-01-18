@@ -84,7 +84,6 @@ function emptyForm(): RoomTypeUpsertBody {
  * - Pricing, capacity, beds, and bedrooms
  * - Amenities (jacuzzi, kitchen)
  * - Gaming equipment (PC tier, PC count, consoles)
- * - Images (uploaded to S3)
  * </p>
  * <p>
  * Requires ROLE_ADMIN permission. Non-admin employees are shown an access denied message.
@@ -329,7 +328,6 @@ export default function AdminRoomTypes() {
                   <TableCell>Price</TableCell>
                   <TableCell>Capacity</TableCell>
                   <TableCell>PC Tier</TableCell>
-                  <TableCell>Images</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -370,7 +368,7 @@ export default function AdminRoomTypes() {
 
                 {!isLoading && (data ?? []).length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6}>
+                    <TableCell colSpan={5}>
                       <Typography color="text.secondary">No room types found.</Typography>
                     </TableCell>
                   </TableRow>
