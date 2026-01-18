@@ -41,7 +41,7 @@ export const reservationApi = apiSlice.injectEndpoints({
      */
     updateReservation: builder.mutation({
       query: ({ id, ...body }) => ({
-        url: `/reservations/${id}`,
+        url: `/api/reservations/${id}`,
         method: 'PUT',
         body,
       }),

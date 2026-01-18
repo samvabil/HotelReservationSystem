@@ -63,7 +63,7 @@ export const roomApi = apiSlice.injectEndpoints({
      */
     getRoomById: builder.query<Room, string>({
       // 1. The URL matches your Controller (@GetMapping("/{id}"))
-      query: (id) => `/rooms/${id}`,
+      query: (id) => `/api/rooms/${id}`,
       
       // 2. (Optional) Cache settings - keep the data fresh
       providesTags: (_result, _error, id) => [{ type: 'Room', id }],
