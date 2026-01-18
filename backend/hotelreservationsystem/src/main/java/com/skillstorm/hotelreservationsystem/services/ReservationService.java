@@ -250,12 +250,14 @@ public class ReservationService {
                 else {
                     // No Payment ID found? Just mark as Refunded/Cancelled
                     r.setStatus(Reservation.ReservationStatus.REFUNDED);
+                    r.setPaymentStatus(Reservation.PaymentStatus.REFUNDED);
                 }
 
             } else {
                 // Less than 72 hours = No Refund
                 // Keep paymentStatus as PAID since the money is retained
                 r.setStatus(Reservation.ReservationStatus.CANCELLED);
+                // Do NOT change paymentStatus—money stays with us
             }
 
             // 3. Free up the Room Dates
