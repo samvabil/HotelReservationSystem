@@ -21,6 +21,7 @@ import {
   Chip,
   FormControlLabel,
   Checkbox,
+  MenuItem,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -47,6 +48,13 @@ const bgStyle = {
   display: "flex",
   alignItems: "center",
 };
+
+/** PC tier options with friendly names and numeric values. */
+const PC_TIER_OPTIONS = [
+  { label: "Standard", value: 1 },
+  { label: "High-End", value: 2 },
+  { label: "God-Tier", value: 3 },
+];
 
 /**
  * Creates an empty room type form with default values.
@@ -460,12 +468,18 @@ export default function AdminRoomTypes() {
                   fullWidth
                 />
                 <TextField
-                  label="PC Tier (1-3)"
-                  type="number"
+                  select
+                  label="PC Tier"
                   value={form.levelOfPc}
                   onChange={(e) => setNum("levelOfPc", e.target.value)}
                   fullWidth
-                />
+                >
+                  {PC_TIER_OPTIONS.map((tier) => (
+                    <MenuItem key={tier.value} value={tier.value}>
+                      {tier.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
                 <TextField
                   label="PC Count"
                   type="number"
