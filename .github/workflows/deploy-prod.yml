@@ -1,4 +1,4 @@
-name: Deploy to Production (prod branch)
+name: Deploy to Production (main branch)
 
 on:
   push:
