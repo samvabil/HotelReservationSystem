@@ -37,7 +37,7 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
             sessionStorage.setItem('redirectPath', fullPath);
 
             // Force the browser to go to your Backend Google Login URL
-            window.location.href = `${SPRING_BOOT_URL}/oauth2/authorization/google`;
+            window.location.href = `${SPRING_BOOT_URL}/api/oauth2/authorization/google`;
         }
     }, [isAuthenticated, location]);
 

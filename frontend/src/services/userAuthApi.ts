@@ -11,7 +11,7 @@ export const authApi = apiSlice.injectEndpoints({
      * Replaces localStorage checks by querying the backend for the current user.
      */
     getCurrentUser: builder.query<User, void>({
-      query: () => '/user', // Assuming you have a route that returns req.user
+      query: () => '/api/user', // Assuming you have a route that returns req.user
       providesTags: ['User'],
     }),
     
@@ -21,7 +21,7 @@ export const authApi = apiSlice.injectEndpoints({
      */
     logoutUser: builder.mutation<void, void>({
       query: () => ({
-        url: '/logout',
+        url: '/api/logout',
         method: 'POST',
       }),
       // When we logout, our 'User' cache is no longer valid

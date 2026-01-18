@@ -15,9 +15,9 @@ export const paymentApi = apiSlice.injectEndpoints({
     createPaymentIntent: builder.mutation<{ clientSecret: string }, { amount: number; currency: string }>({
       query: (body) => ({
         // Note: We use the full path relative to your apiSlice BASE_URL
-        // If apiSlice BASE_URL is 'http://localhost:8080', this becomes:
-        // 'http://localhost:8080/payments/create-intent'
-        url: '/payments/create-intent', 
+        // If apiSlice BASE_URL is 'https://d28qsoaj3pey5k.cloudfront.net', this becomes:
+        // 'https://d28qsoaj3pey5k.cloudfront.net/api/payments/create-intent'
+        url: '/api/payments/create-intent', 
         method: 'POST',
         body,
       }),

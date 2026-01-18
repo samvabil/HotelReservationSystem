@@ -46,7 +46,7 @@ export const roomApi = apiSlice.injectEndpoints({
         }
 
         return {
-          url: '/rooms/search',
+          url: '/api/rooms/search',
           params: params,
         };
       },

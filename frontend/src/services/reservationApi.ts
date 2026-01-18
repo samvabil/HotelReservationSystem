@@ -10,7 +10,7 @@ export const reservationApi = apiSlice.injectEndpoints({
      */
     createReservation: builder.mutation({
       query: (body) => ({
-        url: '/reservations', // Matches the Controller
+        url: '/api/reservations', // Matches the Controller
         method: 'POST',
         body,
       }),
@@ -21,7 +21,7 @@ export const reservationApi = apiSlice.injectEndpoints({
      * Retrieves all reservations for the currently authenticated user.
      */
     getMyReservations: builder.query({
-      query: () => '/reservations/my-reservations',
+      query: () => '/api/reservations/my-reservations',
       providesTags: ['Reservation'],
     }),
 
@@ -30,7 +30,7 @@ export const reservationApi = apiSlice.injectEndpoints({
      */
     cancelReservation: builder.mutation({
       query: (id) => ({
-        url: `/reservations/${id}`,
+        url: `/api/reservations/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Reservation', 'Room'], // Refreshes the list immediately

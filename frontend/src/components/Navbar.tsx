@@ -68,7 +68,7 @@ export default function Navbar() {
     handleCloseSignIn();
     const fullPath = location.pathname + location.search;
     sessionStorage.setItem('redirectPath', fullPath);
-    window.location.href = `${SPRING_BOOT_URL}/oauth2/authorization/google`;
+    window.location.href = `${SPRING_BOOT_URL}/api/oauth2/authorization/google`;
   };
 
   // --- HANDLERS: PROFILE MENU ---
