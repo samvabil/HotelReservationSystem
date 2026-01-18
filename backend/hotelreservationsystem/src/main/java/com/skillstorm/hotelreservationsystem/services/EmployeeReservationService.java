@@ -304,19 +304,20 @@ public class EmployeeReservationService {
 
             long cents = r.getTransaction().getAmountCents();
 
-            boolean isPositive =
-                    r.getPaymentStatus() == Reservation.PaymentStatus.PAID
+            long delta = 0L;
+            
+            // Refunds always subtract
+            if (r.getPaymentStatus() == Reservation.PaymentStatus.REFUNDED 
+                    || r.getStatus() == Reservation.ReservationStatus.REFUNDED) {
+                delta = -cents;
+            }
+            // Completed/Confirmed/Checked-in with PAID status adds to revenue
+            else if (r.getPaymentStatus() == Reservation.PaymentStatus.PAID
                     && (r.getStatus() == Reservation.ReservationStatus.CONFIRMED
                         || r.getStatus() == Reservation.ReservationStatus.CHECKED_IN
-                        || r.getStatus() == Reservation.ReservationStatus.COMPLETED);
-
-            boolean isNegative =
-                    r.getPaymentStatus() == Reservation.PaymentStatus.REFUNDED
-                    || r.getStatus() == Reservation.ReservationStatus.REFUNDED;
-
-            long delta = 0L;
-            if (isPositive) delta = cents;
-            if (isNegative) delta = -cents;
+                        || r.getStatus() == Reservation.ReservationStatus.COMPLETED)) {
+                delta = cents;
+            }
 
             if (delta == 0L) continue;
 
