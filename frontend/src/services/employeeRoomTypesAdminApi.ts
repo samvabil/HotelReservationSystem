@@ -55,7 +55,7 @@ export const employeeRoomTypesAdminApi = apiSlice.injectEndpoints({
      * @returns A list of all room types
      */
     getAdminRoomTypes: builder.query<AdminRoomType[], void>({
-      query: () => "/api/employees/admin/room-types",
+      query: () => "/employees/admin/room-types",
       providesTags: (result) =>
         result
           ? [
@@ -72,7 +72,7 @@ export const employeeRoomTypesAdminApi = apiSlice.injectEndpoints({
      * @returns The room type details
      */
     getAdminRoomTypeById: builder.query<AdminRoomType, string>({
-      query: (id) => `/api/employees/admin/room-types/${id}`,
+      query: (id) => `/employees/admin/room-types/${id}`,
       providesTags: (_res, _err, id) => [{ type: "RoomType", id }],
     }),
 
@@ -84,7 +84,7 @@ export const employeeRoomTypesAdminApi = apiSlice.injectEndpoints({
      */
     createAdminRoomType: builder.mutation<AdminRoomType, RoomTypeUpsertBody>({
       query: (body) => ({
-        url: "/api/employees/admin/room-types",
+        url: "/employees/admin/room-types",
         method: "POST",
         body,
       }),
@@ -100,7 +100,7 @@ export const employeeRoomTypesAdminApi = apiSlice.injectEndpoints({
      */
     updateAdminRoomType: builder.mutation<AdminRoomType, { id: string; body: RoomTypeUpsertBody }>({
       query: ({ id, body }) => ({
-        url: `/api/employees/admin/room-types/${id}`,
+        url: `/employees/admin/room-types/${id}`,
         method: "PUT",
         body,
       }),
@@ -117,7 +117,7 @@ export const employeeRoomTypesAdminApi = apiSlice.injectEndpoints({
      */
     deleteAdminRoomType: builder.mutation<void, string>({
       query: (id) => ({
-        url: `/api/employees/admin/room-types/${id}`,
+        url: `/employees/admin/room-types/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: [{ type: "RoomType", id: "LIST" }],
@@ -139,7 +139,7 @@ export const employeeRoomTypesAdminApi = apiSlice.injectEndpoints({
         formData.append("file", file);
 
         return {
-          url: `/api/employees/admin/room-types/${roomTypeId}/images`,
+          url: `/employees/admin/room-types/${roomTypeId}/images`,
           method: "POST",
           body: formData,
         };

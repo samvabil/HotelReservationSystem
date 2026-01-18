@@ -17,7 +17,8 @@ import jakarta.servlet.http.HttpServletResponse;
  * Security configuration for employee authentication and authorization.
  * <p>
  * This configuration uses Order(1) to have higher priority than UserSecurityConfig.
- * It handles security for all endpoints under "/api/employees/**" using Basic Authentication
+ * It handles security for all endpoints under "/employees/**" (note: requests come through
+ * the /api context path, so the final URLs are /api/employees/**) using Basic Authentication
  * and session-based authentication with CSRF protection.
  * </p>
  *
@@ -47,7 +48,7 @@ public class EmployeeSecurityConfig {
 
         http
             // Only applies to employee API paths
-            .securityMatcher("/api/employees/**")
+            .securityMatcher("/employees/**")
 
             // CSRF enabled, but ignore the bootstrap session endpoint
             .csrf(csrf -> {
@@ -58,7 +59,7 @@ public class EmployeeSecurityConfig {
                 csrf.csrfTokenRepository(repository)
                     .csrfTokenRequestHandler(requestHandler)
                     // 2. Keep your existing ignore rules
-                    .ignoringRequestMatchers("/api/employees/session");
+                    .ignoringRequestMatchers("/employees/session");
             })
 
             .cors(Customizer.withDefaults())
@@ -67,12 +68,12 @@ public class EmployeeSecurityConfig {
 
             .authorizeHttpRequests(auth -> auth
                 // Session bootstrap: any authenticated employee can call it
-                .requestMatchers("/api/employees/session").hasAnyRole("ADMIN", "EMPLOYEE")
+                .requestMatchers("/employees/session").hasAnyRole("ADMIN", "EMPLOYEE")
 
                 // Admin-only endpoints
-                .requestMatchers("/api/employees/admin/**").hasRole("ADMIN")
+                .requestMatchers("/employees/admin/**").hasRole("ADMIN")
 
-                // Everything else under /api/employees requires employee auth
+                // Everything else under /employees requires employee auth
                 .anyRequest().hasAnyRole("ADMIN", "EMPLOYEE")
             )
 

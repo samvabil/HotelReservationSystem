@@ -48,7 +48,7 @@ export const employeeReservationsApi = apiSlice.injectEndpoints({
      */
     searchEmployeeReservations: builder.query<PagedResponse<Reservation>, EmployeeReservationSearchParams | void>({
       query: (params) => ({
-        url: "/api/employees/reservations",
+        url: "/employees/reservations",
         params: params ?? undefined,
       }),
       providesTags: (res) =>
@@ -69,7 +69,7 @@ export const employeeReservationsApi = apiSlice.injectEndpoints({
      */
     updateEmployeeReservation: builder.mutation<Reservation, { id: string; body: ReservationUpdateRequest }>({
       query: ({ id, body }) => ({
-        url: `/api/employees/reservations/${id}`,
+        url: `/employees/reservations/${id}`,
         method: "PUT",
         body,
       }),
@@ -87,7 +87,7 @@ export const employeeReservationsApi = apiSlice.injectEndpoints({
      */
     cancelEmployeeReservation: builder.mutation<void, string>({
       query: (id) => ({
-        url: `/api/employees/reservations/${id}`,
+        url: `/employees/reservations/${id}`,
         method: "DELETE",
       }),
       invalidatesTags: (_res, _err, id) => [
@@ -105,7 +105,7 @@ export const employeeReservationsApi = apiSlice.injectEndpoints({
      */
     checkInEmployeeReservation: builder.mutation<Reservation, string>({
       query: (id) => ({
-        url: `/api/employees/reservations/${id}/check-in`,
+        url: `/employees/reservations/${id}/check-in`,
         method: "POST",
       }),
       invalidatesTags: (_res, _err, id) => [
@@ -123,7 +123,7 @@ export const employeeReservationsApi = apiSlice.injectEndpoints({
      */
     checkOutEmployeeReservation: builder.mutation<Reservation, string>({
       query: (id) => ({
-        url: `/api/employees/reservations/${id}/check-out`,
+        url: `/employees/reservations/${id}/check-out`,
         method: "POST",
       }),
       invalidatesTags: (_res, _err, id) => [
@@ -141,7 +141,7 @@ export const employeeReservationsApi = apiSlice.injectEndpoints({
      */
     getEmployeeRevenueReport: builder.query<RevenueReportResponse, { from?: string; to?: string } | void>({
       query: (params) => ({
-        url: "/api/employees/reservations/reports/revenue",
+        url: "/employees/reservations/reports/revenue",
         params: params ?? undefined,
       }),
       providesTags: [{ type: "Reservation", id: "EMP_REVENUE" }],
