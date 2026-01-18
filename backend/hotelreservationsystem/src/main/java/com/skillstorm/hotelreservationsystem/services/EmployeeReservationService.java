@@ -157,12 +157,8 @@ public class EmployeeReservationService {
                 || existing.getStatus() == Reservation.ReservationStatus.COMPLETED) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot edit a reservation in status: " + existing.getStatus());
         }
-
-        // Reuse your overlap and unavailableDates logic by calling the existing service update method,
-        // but note: your updateReservation recalculates totalPrice and updates room calendars.
         Reservation updated = reservationService.updateReservation(reservationId, request, true);
 
-        // Ensure hydration for employee UI
         hydrate(List.of(updated));
         return updated;
     }
