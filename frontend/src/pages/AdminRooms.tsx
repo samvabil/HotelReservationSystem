@@ -256,9 +256,6 @@ const cancelDelete = () => {
                     <TableRow key={r.id} hover>
                       <TableCell>
                         <Typography fontWeight={700}>{r.roomNumber}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          id: {r.id}
-                        </Typography>
                       </TableCell>
 
                       <TableCell>

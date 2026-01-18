@@ -374,11 +374,11 @@ export default function EmployeeReservations() {
                         }}
                     >
                         <MenuItem value="">All</MenuItem>
-                        <MenuItem value="CONFIRMED">CONFIRMED</MenuItem>
-                        <MenuItem value="CHECKED_IN">CHECKED_IN</MenuItem>
-                        <MenuItem value="COMPLETED">COMPLETED</MenuItem>
-                        <MenuItem value="CANCELLED">CANCELLED</MenuItem>
-                        <MenuItem value="REFUNDED">REFUNDED</MenuItem>
+                        <MenuItem value="CONFIRMED">Confirmed</MenuItem>
+                        <MenuItem value="CHECKED_IN">Checked in</MenuItem>
+                        <MenuItem value="COMPLETED">Completed</MenuItem>
+                        <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                        <MenuItem value="REFUNDED">Refunded</MenuItem>
                     </Select>
                     </FormControl>
 
@@ -418,7 +418,7 @@ export default function EmployeeReservations() {
                         }}
                         slotProps={{ textField: { fullWidth: true } }}
                     />
-                    <Button variant="outlined" onClick={() => refetch()}>
+                    <Button variant="outlined" size="small" onClick={() => refetch()}>
                     Refresh
                     </Button>
                 </Stack>

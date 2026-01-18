@@ -346,13 +346,8 @@ export default function AdminRoomTypes() {
 
                     <TableCell>${rt.pricePerNight.toFixed(2)}</TableCell>
                     <TableCell>{rt.capacity}</TableCell>
-                    <TableCell>{rt.levelOfPc}</TableCell>
+                    <TableCell>{["Standard", "High-End", "God-Tier"][rt.levelOfPc - 1] || rt.levelOfPc}</TableCell>
 
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {(rt.images ?? []).length} url(s)
-                      </Typography>
-                    </TableCell>
 
                     <TableCell align="right">
                       <Stack direction="row" spacing={1} justifyContent="flex-end">
