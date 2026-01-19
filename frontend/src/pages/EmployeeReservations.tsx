@@ -293,25 +293,24 @@ export default function EmployeeReservations() {
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                     Succeeded payments only. Total is confirmed + completed minus refunded.
-                    <availableMonths.map((m) => (
-                        <MenuItem key={m} value={m}>
-                            {m}
-                        </MenuItem>
-                    ))
-                    <MenuItem value="">All time</MenuItem>
-                    {revenue?.revenueByMonthCents
-                        ? Object.keys(revenue.revenueByMonthCents)
-                            .sort()
-                            .reverse()
-                            .map((m) => (
-                            <MenuItem key={m} value={m}>
-                                {m}
-                            </MenuItem>
-                            ))
-                        : null}
-                    </Select>
-                </FormControl>
+                    </Typography>
 
+                    <FormControl fullWidth sx={{ mt: 1 }}>
+                    <InputLabel>Month</InputLabel>
+                    <Select
+                      value={month}
+                      label="Month"
+                      onChange={(e) => setMonth(e.target.value as string)}
+                    >
+                      <MenuItem value="">All time</MenuItem>
+                      {availableMonths.map((m) => (
+                      <MenuItem key={m} value={m}>
+                        {m}
+                      </MenuItem>
+                      ))}
+                    </Select>
+                    </FormControl>
+                    </Box>
                 <Box sx={{ minWidth: 260, textAlign: { xs: "left", md: "right" } }}>
                     {revenueLoading ? (
                     <CircularProgress size={22} />
