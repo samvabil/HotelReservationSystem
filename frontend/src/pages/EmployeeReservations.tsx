@@ -123,6 +123,7 @@ export default function EmployeeReservations() {
 
   // Revenue month filter
   const [month, setMonth] = useState<string>(""); // yyyy-mm
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
 
   // Dialogs
   const [editRow, setEditRow] = useState<Reservation | null>(null);
@@ -172,6 +173,17 @@ export default function EmployeeReservations() {
   }, [month]);
 
   const { data: revenue, isLoading: revenueLoading } = useGetEmployeeRevenueReportQuery(revenueParams);
+
+  // Fetch all-time revenue to get available months (without month filter)
+  const { data: allTimeRevenue } = useGetEmployeeRevenueReportQuery({});
+
+  // Update available months when all-time revenue data is fetched
+  useMemo(() => {
+    if (allTimeRevenue?.revenueByMonthCents) {
+      const months = Object.keys(allTimeRevenue.revenueByMonthCents).sort().reverse();
+      setAvailableMonths(months);
+    }
+  }, [allTimeRevenue]);
 
   const [updateReservation, { isLoading: updating }] = useUpdateEmployeeReservationMutation();
   const [cancelReservation, { isLoading: cancelling }] = useCancelEmployeeReservationMutation();
@@ -281,16 +293,11 @@ export default function EmployeeReservations() {
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                     Succeeded payments only. Total is confirmed + completed minus refunded.
-                    </Typography>
-                </Box>
-
-                <FormControl size="small" sx={{ minWidth: 200 }}>
-                    <InputLabel>Month</InputLabel>
-                    <Select
-                    value={month}
-                    label="Month"
-                    onChange={(e) => setMonth(e.target.value)}
-                    >
+                    <availableMonths.map((m) => (
+                        <MenuItem key={m} value={m}>
+                            {m}
+                        </MenuItem>
+                    ))
                     <MenuItem value="">All time</MenuItem>
                     {revenue?.revenueByMonthCents
                         ? Object.keys(revenue.revenueByMonthCents)
