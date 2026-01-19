@@ -277,8 +277,10 @@ public class EmployeeReservationService {
     /**
      * Generates a revenue report for the specified date range.
      * <p>
-     * Calculates revenue as: sum of PAID transactions (for CONFIRMED/CHECKED_IN/COMPLETED reservations)
-     * minus sum of REFUNDED transactions. Uses transaction.amountCents for accuracy.
+        * Calculates revenue as: sum of PAID transactions for reservations that are
+        * currently in CONFIRMED, CHECKED_IN, or COMPLETED status. REFUNDED
+        * reservations are excluded entirely (net zero effect) and do not subtract
+        * from revenue. Uses transaction.amountCents for accuracy.
      * </p>
      *
      * @param from The start date for the report (optional, null for all time).
@@ -305,14 +307,8 @@ public class EmployeeReservationService {
             long cents = r.getTransaction().getAmountCents();
 
             long delta = 0L;
-            
-            // Refunds always subtract
-            if (r.getPaymentStatus() == Reservation.PaymentStatus.REFUNDED 
-                    || r.getStatus() == Reservation.ReservationStatus.REFUNDED) {
-                delta = -cents;
-            }
-            // Completed/Confirmed/Checked-in with PAID status adds to revenue
-            else if (r.getPaymentStatus() == Reservation.PaymentStatus.PAID
+            // Only include retained revenue: PAID and in revenue-relevant statuses
+            if (r.getPaymentStatus() == Reservation.PaymentStatus.PAID
                     && (r.getStatus() == Reservation.ReservationStatus.CONFIRMED
                         || r.getStatus() == Reservation.ReservationStatus.CHECKED_IN
                         || r.getStatus() == Reservation.ReservationStatus.COMPLETED)) {
